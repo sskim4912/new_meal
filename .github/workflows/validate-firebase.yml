@@ -39,3 +39,4 @@ jobs:
           node-version: "22"
       - run: npm ci --no-audit --no-fund
       - run: node scripts/check-firestore.mjs
+      - run: node scripts/smoke-firestore.mjs

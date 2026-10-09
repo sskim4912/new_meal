@@ -15,7 +15,7 @@ let unlocked = false,
   rows = [],
   detailRows = [],
   query = null,
-  loading = false;
+  queryVersion = 0;
 const groupLabel = (value) => CONFIG.groups[value] ?? value;
 const mealLabel = (value) => CONFIG.meals[value] ?? value;
 const label = (field, value) =>
@@ -119,8 +119,8 @@ function render() {
   renderDetails();
 }
 async function refresh() {
-  if (!unlocked || loading) return;
-  loading = true;
+  if (!unlocked) return;
+  const version = ++queryVersion;
   try {
     const next = {
       mode: $("viewMode").value,
@@ -133,6 +133,7 @@ async function refresh() {
       return;
     }
     const all = await storage.getAllOrders();
+    if (version !== queryVersion || !unlocked) return;
     rows = filterOrders(all, next);
     query = next;
     render();
@@ -141,9 +142,7 @@ async function refresh() {
       "조회가 완료되었습니다. 신청 안 함은 주문 집계에서 제외됩니다.",
     );
   } catch (error) {
-    fail(error);
-  } finally {
-    loading = false;
+    if (version === queryVersion && unlocked) fail(error);
   }
 }
 $("queryDate").value = kstToday();
@@ -176,6 +175,7 @@ $("passwordForm").addEventListener("submit", (event) => {
 });
 $("logoutButton").addEventListener("click", () => {
   unlocked = false;
+  queryVersion++;
   rows = [];
   detailRows = [];
   query = null;
