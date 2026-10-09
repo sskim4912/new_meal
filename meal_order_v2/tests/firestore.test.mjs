@@ -121,6 +121,5 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
       getDocs(collection(db, "unrelated")),
       (e) => e.code === "permission-denied",
     );
-
   });
 }

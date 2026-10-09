@@ -137,6 +137,6 @@ npm run test:firestore
 npm run check:firestore
 ```
 
-`test:firestore`는 실제 운영 프로젝트 대신 `demo-aurora` 에뮬레이터를 사용하여 서로 다른 SDK 클라이언트의 신청 공유·갱신·취소·삭제와 잘못된 입력/마감의 거부를 검증합니다. `check:firestore`는 실제 프로젝트에서 최대 한 문서를 읽을 수 있는지만 확인하며 개인정보를 출력하지 않습니다. GitHub Actions의 Validate Firebase storage에서도 실행합니다.
+`test:firestore`는 실제 운영 프로젝트 대신 `demo-aurora` 에뮬레이터를 사용하여 서로 다른 SDK 클라이언트의 신청 공유·갱신·취소·삭제와 잘못된 입력/마감의 거부를 검증합니다. `check:firestore`는 실제 프로젝트에서 최대 한 문서를 읽을 수 있는지만 확인하며 개인정보를 출력하지 않습니다. GitHub Actions의 Validate Firebase storage에서도 실행합니다. 클라우드 점검은 두 독립 클라이언트로 가짜 신청 한 건을 저장·조회·변경·취소한 뒤 삭제하며 개인정보를 로그에 출력하지 않습니다.
 
 기존 `browser_test.py`는 요청을 로컬 저장 설정으로 바꾸어 화면 회귀를 검증합니다. 이 테스트만으로 실제 Firestore 저장이 검증되지는 않습니다. Firebase SDK 수정 시 `npm run build:firebase`로 번들을 다시 만들고 함께 커밋하세요.

@@ -19,15 +19,24 @@ try {
 } catch (error) {
   console.error(`::error::Firestore readiness: ${error.code || "unknown"}`);
   try {
-    const response = await fetch(`https://firestore.googleapis.com/v1/projects/${FIREBASE.config.projectId}/databases/(default)/documents/${FIREBASE.collection}?pageSize=1`, {
-      headers: {'X-Goog-Api-Key': FIREBASE.config.apiKey}, signal: AbortSignal.timeout(15000),
-    });
+    const response = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${FIREBASE.config.projectId}/databases/(default)/documents/${FIREBASE.collection}?pageSize=1`,
+      {
+        headers: { "X-Goog-Api-Key": FIREBASE.config.apiKey },
+        signal: AbortSignal.timeout(15000),
+      },
+    );
     if (!response.ok) {
       const body = await response.json();
-      const message = String(body.error?.message || response.statusText).replaceAll('%','%25').replaceAll('\r','%0D').replaceAll('\n','%0A');
+      const message = String(body.error?.message || response.statusText)
+        .replaceAll("%", "%25")
+        .replaceAll("\r", "%0D")
+        .replaceAll("\n", "%0A");
       console.error(`::error::Firestore REST ${response.status}: ${message}`);
     }
-  } catch { console.error('::error::Firestore REST endpoint could not be reached.'); }
+  } catch {
+    console.error("::error::Firestore REST endpoint could not be reached.");
+  }
   process.exitCode = 1;
 } finally {
   await deleteApp(app);
