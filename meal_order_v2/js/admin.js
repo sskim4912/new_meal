@@ -28,7 +28,7 @@ function fail(error) {
   console.error(error);
   status(
     "adminStatus",
-    "데이터를 읽거나 변경하지 못했습니다. 브라우저 저장 공간을 확인해주세요.",
+    `데이터를 읽거나 변경하지 못했습니다. ${storage.storageErrorMessage(error)}`,
     true,
   );
 }

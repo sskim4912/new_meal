@@ -11,7 +11,7 @@ import {
 } from "../js/meal-rules.js";
 import { monday, addDays, kstToday, csvText, escapeHTML } from "../js/utils.js";
 import { aggregate, filterOrders } from "../js/aggregate.js";
-import * as storage from "../js/storage.js";
+import * as storage from "../js/local-storage.js";
 test("KST deadline boundaries, independent of host timezone", () => {
   for (const [meal, utc] of [
     ["breakfast", "2026-10-09T04:00:00Z"],

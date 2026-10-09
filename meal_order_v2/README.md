@@ -2,9 +2,11 @@
 
 현장 식사 신청과 관리자 집계를 기능별로 분리한 정적 웹 앱입니다. 기존 운영 `sskim4912/meal_order`는 변경하지 않고, 업무 흐름을 분석하여 새로 구현했습니다. 기존 GS건설 로고 자산만 사용했습니다.
 
-HTML + CSS + Vanilla JavaScript ES Module로 실행합니다. Firebase, Firestore, Firebase Authentication, Firebase SDK, Solapi, 문자 발송, 외부 API와 별도 백엔드를 사용하지 않습니다. 앱 실행에 패키지 설치나 빌드가 필요하지 않습니다.
+HTML + CSS + Vanilla JavaScript ES Module로 실행합니다. 화면은 GitHub Pages에 배포하며, 식사 신청은 Firebase Firestore에 저장합니다. Firebase Authentication, Solapi, 문자 발송과 별도 백엔드는 사용하지 않습니다. Firebase SDK 번들을 저장소에 포함하여 정적 호스팅에서 별도 빌드 없이 실행할 수 있습니다.
 
 ## 실행
+
+앱 실행만 할 때는 패키지 설치가 필요하지 않습니다. Firebase SDK 번들을 다시 만들거나 테스트 도구를 설치할 때는 `npm ci`를 실행하세요.
 
 파일을 더블클릭하는 `file://` 방식 대신 정적 HTTP 서버를 사용하세요.
 
@@ -25,7 +27,12 @@ python3 -m http.server 8000 --bind 127.0.0.1
 | js/config.js | 메뉴·가격·장소·신청자 구분·마감시간·테스트 비밀번호 |
 | js/utils.js | KST 날짜, 날짜 계산, HTML escape, 확인창, 표, CSV |
 | js/meal-rules.js | 메뉴 제한, 마감, 입력 검증, 신청자 식별 |
-| js/storage.js | 모든 localStorage 읽기·쓰기, 비동기 저장 인터페이스 |
+| js/storage.js | Firestore/로컬 저장을 선택하는 비동기 저장 인터페이스 |
+| js/firestore-storage.js | 서버 확인 후 Firestore 저장·조회·삭제 |
+| js/local-storage.js | 기기별 기본정보와 로컬 테스트 저장 |
+| js/firebase-config.js | Firebase 프로젝트 연결 설정 |
+| js/vendor/firebase-sdk.js | 정적 호스팅용 Firebase SDK 번들 |
+| firestore.rules | 인증 없는 테스트 컬렉션의 입력·메뉴·서버 마감 규칙 |
 | js/employee.js | 주간 선택, 변경 수, 불러오기, 확인 후 제출 |
 | js/aggregate.js | 공통 집계와 조회 조건 필터 |
 | js/admin.js | 관리자 조회·검색·삭제·초기화·다운로드 |
@@ -45,11 +52,11 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 **이 기기에 정보 기억**은 기본정보를 별도로 저장합니다. 체크를 해제하면 해당 구분의 기억한 기본정보를 제거합니다. 신청 내역은 삭제하지 않습니다. 체크 이후 입력한 정보는 불러오기 또는 제출 시 갱신됩니다.
 
-KST 조식 전일 13:00, 중식 당일 09:00, 석식 당일 13:00에 마감됩니다. 마감 시각과 같거나 이후이면 변경할 수 없습니다. 확인창에서 시간을 보내는 경우도 저장 직전에 다시 검사합니다. 브라우저 시계에 의존하므로 운영용 강제 마감은 서버에서 검증해야 합니다.
+KST 조식 전일 13:00, 중식 당일 09:00, 석식 당일 13:00에 마감됩니다. 마감 시각과 같거나 이후이면 변경할 수 없습니다. 확인창에서 시간을 보내는 경우도 저장 직전에 다시 검사합니다. 브라우저에서 마감을 검증하고, 함께 제공되는 Firestore 보안 규칙이 배포되면 서버 시각으로도 동일한 마감을 검사합니다. 마감 설정 변경 후에는 `npm run build:rules`로 규칙을 다시 만들고 Firebase 콘솔에 반영하세요.
 
 ## 관리자
 
-테스트 비밀번호: `tngml4912!`
+화면 잠금 비밀번호: `230880`
 
 일별/월별과 신청자 구분을 선택하여 총 수량·부가세 포함 총 금액, 상세 집계, 구분/식사/장소/메뉴 소계, 월별 날짜 합계, 신청자 상세 내역을 확인합니다. 검색은 상세 내역에만 적용되고 합계 및 CSV에는 적용되지 않습니다.
 
@@ -59,14 +66,27 @@ KST 조식 전일 13:00, 중식 당일 09:00, 석식 당일 13:00에 마감됩�
 
 **정적 HTML/JavaScript의 관리자 비밀번호는 실제 보안수단이 아닙니다.** 소스에서 읽거나 화면 제한을 우회할 수 있습니다. 개인정보와 운영 데이터를 이 테스트 앱에서 안전하게 보호할 수 없습니다. 실제 운영 전에는 서버 인증·권한 검사·서버 마감 검증으로 교체해야 합니다.
 
-## 현재 저장 방식과 한계
+## Firestore 저장과 기본정보 기억
 
-- 신청은 `aurora.v2.orders`, 기억한 기본정보는 `aurora.v2.profiles`라는 서로 다른 localStorage 키에 저장됩니다.
-- 신청은 id, group, requesterKey, empId, company, name, phone, date, meal, menu, location, updatedAt를 포함합니다. id는 신청자·날짜·식사를 조합하여 중복 생성 대신 갱신합니다.
-- localStorage는 **동일 기기·브라우저·사이트 주소**에서만 공유됩니다. 직원의 휴대폰과 관리자의 PC 사이에 데이터가 공유되지 않습니다. 주소나 포트를 바꿔도 별도 데이터입니다.
-- 시크릿 모드 종료, 브라우저 데이터 삭제, 기기 변경 시 사라질 수 있습니다. 저장 공간 부족·정책 제한·손상된 JSON은 오류로 알리고 임의로 덮어쓰지 않습니다.
-- 여러 탭이 동시에 저장하면 충돌할 수 있습니다. 공동 운영, 백업, 감사 이력, 실시간 동기화 용도로 사용하면 안 됩니다.
-- 기존 운영 앱의 데이터는 가져오거나 변경하지 않습니다.
+- 신청은 `new-meal-7b1c8` 프로젝트의 `aurora_v2_orders` 컬렉션에 저장됩니다. 모든 기기의 관리자 화면에서 조회할 수 있습니다.
+- 기억한 기본정보는 기기별 `aurora.v2.profiles` localStorage에만 저장됩니다. 신청 데이터와 분리되어 있습니다.
+- 신청자·날짜·식사의 조합을 SHA-256 문서 ID로 사용하여 같은 신청은 갱신합니다. 변경 내역은 한 번에 최대 450건까지 원자적으로 저장합니다.
+- 저장 시각은 Firestore 서버 타임스탬프입니다. 서버 저장 승인을 기다린 뒤 완료 메시지를 표시합니다. 연결 실패 시 localStorage로 대체하지 않습니다.
+- 기존 브라우저의 `aurora.v2.orders` 데이터는 자동 업로드하지 않습니다. 마감된 과거 신청은 별도 이관 계획이 필요합니다.
+- 인증 없는 테스트 방식으로, 다른 기기의 직원도 동일한 신청자 정보를 입력하면 내역을 불러올 수 있습니다. 관리자 화면의 숫자 비밀번호는 Firestore 접근 통제가 아닙니다.
+- 전체 초기화는 조회 당시 문서들을 450건 단위로 삭제합니다. 도중 오류 또는 동시 신규 신청이 있으면 다시 조회하여 남은 내역을 확인하세요.
+- Firebase 비용/사용 한도, 인터넷 연결, Firestore 보안 규칙에 따라 읽기·쓰기가 실패할 수 있습니다.
+
+## Firebase 콘솔 설정
+
+1. Firebase 콘솔에서 `new-meal-7b1c8` 프로젝트를 엽니다.
+2. Build → Firestore Database → 데이터베이스 만들기로 `(default)` 데이터베이스를 생성합니다. 이미 있다면 다시 생성하지 않습니다.
+3. Rules 탭에 `firestore.rules` 내용을 반영하고 **게시**합니다. 기존 다른 컬렉션 규칙이 있다면 해당 함수와 `aurora_v2_orders` 블록을 기존 파일에 합치고 다른 규칙을 유지하세요.
+4. 이 규칙은 테스트 컬렉션의 읽기·삭제를 공개하고 입력 검증과 서버 마감을 적용합니다. **인증 없는 테스트 전용으로 승인된 구조이며 실제 개인정보 보호를 제공하지 않습니다.**
+5. 컬렉션은 첫 신청 저장 때 자동 생성됩니다. 별도로 문서를 만들 필요는 없습니다.
+6. 관리자 비밀번호 `230880`은 화면 잠금으로만 사용합니다. Firebase Authentication이나 Cloud Functions 배포는 필요하지 않습니다.
+
+Firebase 설정은 `js/firebase-config.js`에 있습니다. 웹 앱 설정(apiKey 등)은 공개 설정이며 서비스 계정 비공개 키를 넣으면 안 됩니다. 일반 실행은 `enabled: true`, 로컬 회귀 테스트만 `false`를 사용합니다. 연결 오류를 피하기 위해 공개 페이지를 임의로 로컬 모드로 전환하지 마세요.
 
 ## 설정 수정 방법
 
@@ -77,11 +97,9 @@ KST 조식 전일 13:00, 중식 당일 09:00, 석식 당일 13:00에 마감됩�
 - **장소**: `locations` 목록에 장소를 추가하거나 제거합니다. 첫 번째 장소가 신규 중식의 기본값입니다. 최소 한 곳은 유지하세요. 기존 신청에 삭제된 장소가 있으면 수정 시 새 장소를 선택해야 합니다.
 - **마감**: `deadlines`에서 `time`을 `'13:00'`처럼 24시간 형식으로 바꿉니다. `offsetDays: -1`은 전날, `0`은 당일입니다. 기준은 항상 한국시간입니다.
 
-## 향후 DB 연결
+## 향후 다른 DB 연결
 
-`storage.js`의 비동기 함수들을 서버 호출로 교체하세요. 직원/관리자는 localStorage를 직접 사용하지 않습니다.
-
-`getAllOrders()`, `getOrdersByRequester(requesterKey)`, `upsertOrders(changes)`, `deleteOrder(id)`, `resetOrders()`, `getProfiles()`, `saveProfiles(profiles)`, `clearProfiles()` 인터페이스를 유지합니다. upsert는 신청자/날짜/식사당 한 건, 변경 묶음의 원자적 저장을 보장해야 합니다. 서버에서 인증·관리자 권한·입력 검증·마감·동시 변경 처리를 구현하세요. 기본정보 기억 기능은 기기 전용 저장으로 유지할 수 있습니다.
+`storage.js`의 비동기 인터페이스를 유지하여 저장 구현을 교체할 수 있습니다. 직원/관리자는 저장 API만 사용합니다. `getAllOrders()`, `getOrdersByRequester(requesterKey)`, `upsertOrders(changes)`, `deleteOrder(id)`, `resetOrders()`, `getProfiles()`, `saveProfiles(profiles)`, `clearProfiles()`를 제공합니다.
 
 ## GitHub Pages
 
@@ -90,11 +108,11 @@ KST 조식 전일 13:00, 중식 당일 09:00, 석식 당일 13:00에 마감됩�
 3. `main` 브랜치와 `/ (root)`를 선택하고 저장합니다.
 4. 배포된 사이트 주소 뒤에 `/meal_order_v2/`를 붙여 직원 화면을 엽니다. 관리자는 `/meal_order_v2/admin.html`입니다.
 
-상대 경로를 사용하여 저장소 이름이 달라도 실행할 수 있습니다. 자동 배포 설정이나 실제 게시/푸시는 이번 구현에 포함하지 않았습니다.
+상대 경로를 사용하여 저장소 이름이 달라도 실행할 수 있습니다. `main`에 푸시하면 기존 GitHub Pages 설정으로 자동 재배포됩니다. Firebase 규칙 게시와 GitHub Pages 배포는 서로 다른 작업입니다.
 
 ## 테스트
 
-별도 npm 설치 없이 Node 20 이상에서:
+업무 규칙 단위 테스트는 별도 npm 설치 없이 Node 22 이상에서:
 
 ```sh
 cd /workspace/new_meal/meal_order_v2
@@ -110,3 +128,15 @@ python3 tests/browser_test.py
 다른 브라우저 실행 파일은 `CHROMIUM_PATH`, 다른 서버 주소는 `AURORA_TEST_URL` 환경변수로 지정할 수 있습니다. 테스트는 별도 브라우저 컨텍스트의 가상 데이터와 고정 시각을 사용하며 실제 사용자 데이터를 지우지 않습니다. 모바일 화면 캡처는 `/tmp/aurora-employee-360.png` 등으로 저장됩니다.
 
 현재 자동 검증은 Chromium에서 수행합니다. 실제 iOS Safari와 Android Chrome/Edge 기기 검수는 운영 전 추가로 수행하세요.
+
+Firestore 공유 저장과 보안 규칙 테스트는 Java 21 이상, Node 22 이상, 도구 설치가 필요합니다.
+
+```sh
+npm ci
+npm run test:firestore
+npm run check:firestore
+```
+
+`test:firestore`는 실제 운영 프로젝트 대신 `demo-aurora` 에뮬레이터를 사용하여 서로 다른 SDK 클라이언트의 신청 공유·갱신·취소·삭제와 잘못된 입력/마감의 거부를 검증합니다. `check:firestore`는 실제 프로젝트에서 최대 한 문서를 읽을 수 있는지만 확인하며 개인정보를 출력하지 않습니다. GitHub Actions의 Validate Firebase storage에서도 실행합니다.
+
+기존 `browser_test.py`는 요청을 로컬 저장 설정으로 바꾸어 화면 회귀를 검증합니다. 이 테스트만으로 실제 Firestore 저장이 검증되지는 않습니다. Firebase SDK 수정 시 `npm run build:firebase`로 번들을 다시 만들고 함께 커밋하세요.

@@ -24,13 +24,14 @@ def login(page):
     page.locator('#password').fill('wrong')
     page.locator('#passwordForm button[type="button"] + button').click()
     expect(page.locator('#passwordError')).to_contain_text('확인')
-    page.locator('#password').fill('tngml4912!')
+    page.locator('#password').fill('230880')
     page.locator('#passwordForm button[type="button"] + button').click()
     expect(page.locator('#adminContent')).to_be_visible()
 
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH', '/usr/bin/chromium'), headless=True, args=['--no-sandbox'])
     context = browser.new_context(viewport={'width':1120,'height':900}, accept_downloads=True)
+    context.route('**/js/firebase-config.js', lambda route: route.fulfill(content_type='text/javascript',body="export const FIREBASE = { enabled: false };"))
     page = context.new_page()
     errors=[]
     page.on('pageerror', lambda error: errors.append(str(error)))
@@ -147,6 +148,7 @@ with sync_playwright() as p:
     assert not errors, errors
     # 별도 컨텍스트에서 조식 저장 및 저장 공간 오류를 검증합니다.
     isolated = browser.new_context()
+    isolated.route('**/js/firebase-config.js', lambda route: route.fulfill(content_type='text/javascript',body="export const FIREBASE = { enabled: false };"))
     extra = isolated.new_page()
     extra.clock.install(time=datetime(2026,10,4,0,0,tzinfo=timezone.utc))
     extra.goto(BASE)

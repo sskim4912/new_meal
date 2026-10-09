@@ -42,11 +42,7 @@ function readProfile() {
 }
 function storageError(error) {
   console.error(error);
-  status(
-    "employeeStatus",
-    "브라우저의 저장 공간을 사용할 수 없습니다. 저장 설정이나 용량을 확인해주세요.",
-    true,
-  );
+  status("employeeStatus", storage.storageErrorMessage(error), true);
 }
 function renderIdentity() {
   document.querySelectorAll("[data-group]").forEach((button) => {
@@ -314,7 +310,7 @@ $("submitButton").addEventListener("click", async () => {
     console.error(error);
     status(
       "saveStatus",
-      "신청을 저장하지 못했습니다. 브라우저 저장 공간을 확인하고 다시 시도해주세요.",
+      `신청을 저장하지 못했습니다. ${storage.storageErrorMessage(error)}`,
       true,
     );
   } finally {

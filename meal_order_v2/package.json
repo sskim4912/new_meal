@@ -3,9 +3,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/rules.test.mjs"
+    "test": "node --test tests/rules.test.mjs",
+    "build:firebase": "node scripts/build-firebase.mjs",
+    "test:firestore": "firebase emulators:exec --project demo-aurora --only firestore \"node --test tests/firestore.test.mjs\"",
+    "build:rules": "node scripts/build-firestore-rules.mjs",
+    "check:firestore": "node scripts/check-firestore.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "firebase-tools": "15.33.0",
+    "esbuild": "0.28.2"
+  },
+  "dependencies": {
+    "firebase": "13.0.0"
   }
 }

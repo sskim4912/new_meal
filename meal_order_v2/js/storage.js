@@ -1,49 +1,36 @@
-// DB 교체 시 이 모듈의 비동기 인터페이스를 유지하세요.
-const ORDERS = "aurora.v2.orders";
-const PROFILES = "aurora.v2.profiles";
-function read(key, fallback) {
-  const raw = localStorage.getItem(key);
-  if (raw === null) return fallback;
-  const data = JSON.parse(raw);
-  if (
-    !data ||
-    typeof data !== "object" ||
-    (key === ORDERS && !Array.isArray(data)) ||
-    (key === PROFILES && Array.isArray(data))
-  )
-    throw new Error("Invalid stored data");
-  return data;
-}
-function write(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+// 모든 저장 코드는 이 모듈을 통해 호출합니다. 기본정보는 기기에만 기억합니다.
+import { FIREBASE } from "./firebase-config.js";
+import * as local from "./local-storage.js";
+async function orderStore() {
+  return FIREBASE.enabled ? import("./firestore-storage.js") : local;
 }
 export async function getAllOrders() {
-  return read(ORDERS, []);
+  return (await orderStore()).getAllOrders();
 }
 export async function getOrdersByRequester(key) {
-  return (await getAllOrders()).filter((row) => row.requesterKey === key);
+  return (await orderStore()).getOrdersByRequester(key);
 }
 export async function upsertOrders(changes) {
-  const rows = await getAllOrders();
-  const map = new Map(rows.map((row) => [row.id, row]));
-  changes.forEach((row) => map.set(row.id, { ...row }));
-  write(ORDERS, [...map.values()]);
+  return (await orderStore()).upsertOrders(changes);
 }
 export async function deleteOrder(id) {
-  write(
-    ORDERS,
-    (await getAllOrders()).filter((row) => row.id !== id),
-  );
+  return (await orderStore()).deleteOrder(id);
 }
 export async function resetOrders() {
-  localStorage.removeItem(ORDERS);
+  return (await orderStore()).resetOrders();
 }
-export async function getProfiles() {
-  return read(PROFILES, {});
-}
-export async function saveProfiles(profiles) {
-  write(PROFILES, profiles);
-}
-export async function clearProfiles() {
-  localStorage.removeItem(PROFILES);
+export const getProfiles = local.getProfiles;
+export const saveProfiles = local.saveProfiles;
+export const clearProfiles = local.clearProfiles;
+export const usingFirestore = () => FIREBASE.enabled;
+export function storageErrorMessage(error) {
+  if (error.partialDeletion)
+    return "일부 내역만 삭제되었습니다. 다시 조회하여 남은 내역을 확인해주세요.";
+  if (!FIREBASE.enabled)
+    return "브라우저 저장 공간을 확인하고 다시 시도해주세요.";
+  if (String(error.code).includes("permission-denied"))
+    return "Firestore 접근이 거부되었습니다. Firebase 콘솔의 테스트용 보안 규칙을 확인해주세요.";
+  if (String(error.code).includes("resource-exhausted"))
+    return "Firebase 사용 한도에 도달했습니다. 잠시 후 다시 시도해주세요.";
+  return "Firebase 연결을 확인하고 다시 시도해주세요. 저장 실패 시 입력한 변경사항은 유지됩니다.";
 }

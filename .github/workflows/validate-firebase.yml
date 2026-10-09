@@ -1,0 +1,41 @@
+name: Validate Firebase storage
+on:
+  push:
+    branches: [firebase-storage]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: meal_order_v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: meal_order_v2/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci --no-audit --no-fund
+      - run: node --test tests/rules.test.mjs
+      - run: npx firebase emulators:exec --project demo-aurora --only firestore 'node --test tests/firestore.test.mjs'
+  cloud-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: meal_order_v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/check-firestore.mjs
