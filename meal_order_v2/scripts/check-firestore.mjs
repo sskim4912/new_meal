@@ -17,7 +17,7 @@ try {
     "PASS: configured Firestore collection is reachable and readable.",
   );
 } catch (error) {
-  console.error(`FAIL: Firestore readiness: ${error.code || "unknown"}`);
+  console.error(`::error::Firestore readiness: ${error.code || "unknown"}`);
   process.exitCode = 1;
 } finally {
   await deleteApp(app);

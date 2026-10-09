@@ -42,6 +42,10 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
   const db = getFirestore(app);
   connectFirestoreEmulator(db, host, Number(port));
   const orders = collection(db, FIREBASE.collection);
+  test.after(async () => {
+    await deleteApp(app);
+    await closeFirestore();
+  });
   test("Firestore: shared storage, updates, cancellation, profiles and deletion", async () => {
     await storage.resetOrders();
     await storage.upsertOrders([
@@ -117,7 +121,6 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
       getDocs(collection(db, "unrelated")),
       (e) => e.code === "permission-denied",
     );
-    await deleteApp(app);
-    await closeFirestore();
+
   });
 }
