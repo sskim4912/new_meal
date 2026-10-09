@@ -1,0 +1,11 @@
+{
+  "name": "aurora-meal-order-v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/rules.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aurora Project · 현장 식사 신청</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="module" src="js/employee.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="header">
+        <div class="brand">
+          <img src="assets/gs-logo.jpeg" alt="GS건설 로고" />
+          <div><strong>Aurora Project</strong><span>현장 식사 신청</span></div>
+        </div>
+        <a class="button" href="admin.html">관리자</a>
+      </div>
+    </header>
+    <main>
+      <div class="page-heading">
+        <p class="eyebrow">MEAL ORDER · V2</p>
+        <h1>이번 주 식사 신청</h1>
+        <p>신청자 정보를 입력하고 식사를 선택해주세요.</p>
+      </div>
+      <section class="panel" aria-label="신청자 정보">
+        <div class="tabs" role="tablist" aria-label="신청자 구분">
+          <button
+            id="tab-gs"
+            role="tab"
+            aria-controls="identityPanel"
+            aria-selected="true"
+            data-group="gs"
+          >
+            GS직원</button
+          ><button
+            id="tab-partner"
+            role="tab"
+            aria-controls="identityPanel"
+            aria-selected="false"
+            data-group="partner"
+          >
+            협력사</button
+          ><button
+            id="tab-vip"
+            role="tab"
+            aria-controls="identityPanel"
+            aria-selected="false"
+            data-group="vip"
+          >
+            VIP
+          </button>
+        </div>
+        <div id="identityPanel" role="tabpanel" aria-labelledby="tab-gs">
+          <div id="identityFields" class="fields"></div>
+          <div class="actions">
+            <label class="check"
+              ><input type="checkbox" id="remember" />이 기기에 정보 기억</label
+            ><button id="loadButton">기존 신청 불러오기</button>
+          </div>
+          <p id="employeeStatus" class="status" aria-live="polite">
+            기존 신청은 정보를 입력한 뒤 불러올 수 있습니다.
+          </p>
+        </div>
+      </section>
+      <div class="notice">
+        한국시간 기준 · 조식 전일 13:00 / 중식 당일 09:00 / 석식 당일 13:00
+        마감<br />이 테스트 버전의 신청은 현재 브라우저에만 저장됩니다.
+      </div>
+      <nav class="weekbar" aria-label="신청 주간">
+        <button id="prevWeek">‹ 이전 주</button><strong id="weekLabel"></strong
+        ><button id="nextWeek">다음 주 ›</button>
+      </nav>
+      <section class="days" id="days" aria-label="주간 식사 선택"></section>
+      <section class="submit-panel">
+        <div>
+          <strong id="changeCount">변경한 내역 0건</strong>
+          <p>제출 버튼을 눌러 저장해주세요.</p>
+        </div>
+        <button id="submitButton" class="primary">신청 내역 제출</button>
+        <p id="saveStatus" class="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <footer>Aurora Project · 식사 신청 V2 <span>로컬 테스트 버전</span></footer>
+    <dialog id="confirmDialog">
+      <h2 id="confirmTitle"></h2>
+      <p id="confirmText" class="confirm-text"></p>
+      <form method="dialog" class="actions">
+        <button value="no">취소</button
+        ><button value="yes" class="primary">확인</button>
+      </form>
+    </dialog>
+    <dialog id="successDialog">
+      <div class="success-icon" aria-hidden="true">✓</div>
+      <h2>신청 완료</h2>
+      <p id="successText" class="confirm-text"></p>
+      <form method="dialog"><button class="primary">확인</button></form>
+    </dialog>
+  </body>
+</html>
