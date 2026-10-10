@@ -204,7 +204,15 @@ with sync_playwright() as p:
         return calendar.locator(f'.day:has(#menu-{date}-lunch)')
     expect(card('2027-01-01').locator('.holiday-name')).to_have_text('신정')
     assert card('2027-01-01').locator('.day-head span').evaluate('(el)=>getComputedStyle(el).color')=='rgb(174, 52, 52)'
+    assert card('2027-01-01').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 241, 241)'
     assert card('2027-01-02').locator('.holiday-name').count()==0
+    assert card('2027-01-02').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 255, 255)'
+    calendar.locator('#prevWeek').click()
+    expect(card('2026-12-25').locator('.holiday-name')).to_have_text('성탄절')
+    assert card('2026-12-25').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 241, 241)'
+    assert card('2026-12-24').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 255, 255)'
+    calendar.screenshot(path='/tmp/aurora-holidays-2026.png',full_page=True)
+    calendar.locator('#nextWeek').click()
     expect(calendar.locator('#weeklyGreeting')).to_contain_text('이번 주')
     for width in [360,390,430]:
         calendar.set_viewport_size({'width':width,'height':850})
@@ -212,6 +220,7 @@ with sync_playwright() as p:
     calendar.evaluate("for(let i=0;i<18;i++)document.getElementById('nextWeek').click()")
     expect(calendar.locator('#weekLabel')).to_contain_text('2027.05.03')
     expect(card('2027-05-03').locator('.holiday-name')).to_have_text('노동절 대체공휴일')
+    assert card('2027-05-03').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 241, 241)'
     expect(card('2027-05-05').locator('.holiday-name')).to_have_text('어린이날')
     assert card('2027-05-04').locator('.holiday-name').count()==0
     calendar_context.close()

@@ -150,8 +150,19 @@ test("Monday breakfast is not offered; Tuesday breakfast remains available", () 
   );
 });
 
+test("2026 holiday calendar includes lunar, election and substitute holidays", () => {
+  assert.equal(Object.keys(CONFIG.holidays).filter(date => date.startsWith("2026-")).length, 22);
+  assert.equal(CONFIG.holidays["2026-02-17"], "설날");
+  assert.equal(CONFIG.holidays["2026-05-25"], "부처님오신날 대체공휴일");
+  assert.equal(CONFIG.holidays["2026-06-03"], "지방선거일");
+  assert.equal(CONFIG.holidays["2026-09-25"], "추석");
+  assert.equal(CONFIG.holidays["2026-10-05"], "개천절 대체공휴일");
+  assert.equal(CONFIG.holidays["2026-12-25"], "성탄절");
+  assert.equal(CONFIG.holidays["2026-06-08"], undefined);
+});
+
 test("2027 holiday calendar includes lunar and substitute holidays", () => {
-  assert.equal(Object.keys(CONFIG.holidays).length, 24);
+  assert.equal(Object.keys(CONFIG.holidays).filter(date => date.startsWith("2027-")).length, 24);
   assert.equal(CONFIG.holidays["2027-02-09"], "설날 대체공휴일");
   assert.equal(CONFIG.holidays["2027-05-03"], "노동절 대체공휴일");
   assert.equal(CONFIG.holidays["2027-07-19"], "제헌절 대체공휴일");

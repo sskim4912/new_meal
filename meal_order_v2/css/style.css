@@ -479,6 +479,10 @@ footer {
   }
 }
 
+.day.holiday {
+  background: #fff1f1;
+  border-color: #f0cccc;
+}
 .day-head.holiday h2,
 .day-head.holiday span,
 .holiday-name {

@@ -1,9 +1,9 @@
-import { HOLIDAYS_2027 } from "./holidays.js";
+import { HOLIDAYS_2026, HOLIDAYS_2027 } from "./holidays.js";
 // 메뉴·가격·장소·마감 변경은 이 파일에서 관리합니다.
 export const CONFIG = {
   projectName: "Aurora Project",
   weeklyGreeting: "이번 주도 든든한 식사와 함께하세요.",
-  holidays: { ...HOLIDAYS_2027 },
+  holidays: { ...HOLIDAYS_2026, ...HOLIDAYS_2027 },
   groups: { gs: "GS직원", partner: "협력사", vip: "VIP" },
   meals: { breakfast: "조식", lunch: "중식", dinner: "석식" },
   noOrder: "신청 안 함",
