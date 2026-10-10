@@ -5,6 +5,7 @@ import {
   deadline,
   isClosed,
   menusFor,
+  isUnavailable,
   normalizeProfile,
   requesterKey,
   validateChange,
@@ -132,4 +133,19 @@ test("storage upserts, cancellation, profile separation, corruption and write fa
   assert.deepEqual(await storage.getAllOrders(), []);
   await storage.clearProfiles();
   assert.deepEqual(await storage.getProfiles(), {});
+});
+
+test("Monday breakfast is not offered; Tuesday breakfast remains available", () => {
+  assert.equal(isUnavailable("2026-10-12", "breakfast"), true);
+  assert.deepEqual(menusFor("breakfast", "2026-10-12"), [CONFIG.noOrder]);
+  assert.equal(isUnavailable("2026-10-13", "breakfast"), false);
+  assert.equal(menusFor("breakfast", "2026-10-13").length, 8);
+  assert.throws(
+    () =>
+      validateChange(
+        { date: "2026-10-12", meal: "breakfast", menu: CONFIG.menus[0] },
+        Date.parse("2026-10-10T00:00:00Z"),
+      ),
+    /메뉴/,
+  );
 });

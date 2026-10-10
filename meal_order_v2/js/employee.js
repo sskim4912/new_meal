@@ -11,6 +11,7 @@ import {
 import {
   menusFor,
   isClosed,
+  isUnavailable,
   deadlineLabel,
   normalizeProfile,
   requesterKey,
@@ -85,15 +86,18 @@ function renderDays() {
         const saved = state().baseline.get(key);
         const row = state().drafts.get(key) ??
           saved ?? { menu: CONFIG.noOrder, location: "" };
+        const unavailable = isUnavailable(date, meal);
         const closed = isClosed(date, meal);
-        const options = menusFor(meal);
+        const options = menusFor(meal, date);
         const legacy = !options.includes(row.menu);
-        const badge = closed
-          ? "마감"
-          : saved && saved.menu !== CONFIG.noOrder
-            ? "신청 완료"
-            : "선택 가능";
-        return `<div class="slot"><div class="slot-title"><label for="menu-${date}-${meal}">${label}</label><span class="badge ${closed ? "closed" : ""}">${badge}</span></div><select id="menu-${date}-${meal}" data-date="${date}" data-meal="${meal}" ${closed || busy ? "disabled" : ""}>${legacy ? `<option value="${esc(row.menu)}" selected disabled>${esc(row.menu)} (이전 메뉴)</option>` : ""}${options.map((menu) => `<option ${menu === row.menu ? "selected" : ""}>${esc(menu)}</option>`).join("")}</select>${meal === "lunch" && row.menu !== CONFIG.noOrder ? `<label class="location-label">중식 장소<select data-location="true" data-date="${date}" data-meal="${meal}" ${closed || busy ? "disabled" : ""}>${!CONFIG.locations.includes(row.location) ? `<option selected disabled>${esc(row.location || "장소 선택")}</option>` : ""}${CONFIG.locations.map((location) => `<option ${location === row.location ? "selected" : ""}>${esc(location)}</option>`).join("")}</select></label>` : ""}<small>${esc(deadlineLabel(meal))}</small></div>`;
+        const badge = unavailable
+          ? "미운영"
+          : closed
+            ? "마감"
+            : saved && saved.menu !== CONFIG.noOrder
+              ? "신청 완료"
+              : "선택 가능";
+        return `<div class="slot"><div class="slot-title"><label for="menu-${date}-${meal}">${label}</label><span class="badge ${closed ? "closed" : ""}">${badge}</span></div><select id="menu-${date}-${meal}" data-date="${date}" data-meal="${meal}" ${closed || busy || unavailable ? "disabled" : ""}>${legacy ? `<option value="${esc(row.menu)}" selected disabled>${esc(row.menu)} (이전 메뉴)</option>` : ""}${options.map((menu) => `<option ${menu === row.menu ? "selected" : ""}>${esc(menu)}</option>`).join("")}</select>${meal === "lunch" && row.menu !== CONFIG.noOrder ? `<label class="location-label">중식 장소<select data-location="true" data-date="${date}" data-meal="${meal}" ${closed || busy || unavailable ? "disabled" : ""}>${!CONFIG.locations.includes(row.location) ? `<option selected disabled>${esc(row.location || "장소 선택")}</option>` : ""}${CONFIG.locations.map((location) => `<option ${location === row.location ? "selected" : ""}>${esc(location)}</option>`).join("")}</select></label>` : ""}<small>${esc(unavailable ? "월요일 조식은 신청 안 함" : deadlineLabel(meal))}</small></div>`;
       })
       .join("")}</article>`;
   }).join("");
@@ -172,7 +176,7 @@ document.querySelector(".tabs").addEventListener("keydown", (event) => {
 });
 $("days").addEventListener("change", (event) => {
   const { date, meal, location } = event.target.dataset;
-  if (!date || isClosed(date, meal)) {
+  if (!date || isClosed(date, meal) || isUnavailable(date, meal)) {
     renderDays();
     return;
   }

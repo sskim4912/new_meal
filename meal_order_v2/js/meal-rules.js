@@ -1,6 +1,11 @@
 import { CONFIG } from "./config.js";
 import { addDays } from "./utils.js";
-export function menusFor(meal) {
+export function isUnavailable(date, meal) {
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+  return CONFIG.unavailableWeekdays?.[meal]?.includes(weekday) ?? false;
+}
+export function menusFor(meal, date) {
+  if (date && isUnavailable(date, meal)) return [CONFIG.noOrder];
   const rule = CONFIG.menuRules[meal];
   return [
     CONFIG.noOrder,
@@ -57,7 +62,7 @@ export function validateChange(row, now = Date.now()) {
     throw new Error(
       "해당 식사의 마감 시간이 지났습니다. 기존 신청을 다시 불러와주세요.",
     );
-  if (!menusFor(row.meal).includes(row.menu))
+  if (!menusFor(row.meal, row.date).includes(row.menu))
     throw new Error("선택 가능한 메뉴를 확인해주세요.");
   if (
     row.meal === "lunch" &&
