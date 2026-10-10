@@ -71,7 +71,8 @@ function renderIdentity() {
         `<label>${label}<input data-field="${key}" type="${type}" maxlength="${max}" value="${esc(state().profile[key] || "")}" autocomplete="${key === "name" ? "name" : key === "phone" ? "tel" : "off"}"></label>`,
     )
     .join("");
-  $("remember").checked = Boolean(profiles[group]);
+  $("remember").checked =
+    Boolean(profiles[group]) && Object.keys(state().profile).length > 0;
 }
 function renderDays() {
   $("weekLabel").textContent =
@@ -332,15 +333,20 @@ setInterval(() => {
   if (!busy) renderDays();
 }, 30000);
 async function init() {
+  const freshStart = new URLSearchParams(location.search).get("start") === "new";
   $("weeklyGreeting").textContent = CONFIG.weeklyGreeting;
+  renderIdentity();
+  renderDays();
   try {
     profiles = await storage.getProfiles();
-    for (const key of Object.keys(states))
-      states[key].profile = profiles[key] ?? {};
+    if (!freshStart)
+      for (const key of Object.keys(states))
+        states[key].profile = profiles[key] ?? {};
   } catch (error) {
     storageError(error);
   }
   renderIdentity();
   renderDays();
+  if (freshStart) $("identityFields").querySelector("input").focus();
 }
 init();

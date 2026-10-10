@@ -140,6 +140,18 @@ with sync_playwright() as p:
     assert page.evaluate("JSON.parse(localStorage.getItem('aurora.v2.profiles')).gs.empId")=='A-123'
     page.locator('#logoutButton').click()
     expect(page.locator('#adminContent')).to_be_hidden()
+    # 관리자에서 직원 화면으로 돌아오면 기억된 정보와 무관하게 처음부터 입력합니다.
+    page.get_by_role('link', name='직원 화면').click()
+    expect(page.locator('[data-field="empId"]')).to_have_value('')
+    expect(page.locator('[data-field="name"]')).to_have_value('')
+    expect(page.locator('[data-field="empId"]')).to_be_focused()
+    expect(page.locator('#remember')).not_to_be_checked()
+    expect(page.locator('.day')).to_have_count(6)
+    expect(page.locator('#changeCount')).to_contain_text('0건')
+    assert all(value == '신청 안 함' for value in page.locator('#days select').evaluate_all('(elements) => elements.map(el => el.value)'))
+    assert page.evaluate("JSON.parse(localStorage.getItem('aurora.v2.profiles')).gs.empId") == 'A-123'
+    page.reload()
+    expect(page.locator('[data-field="empId"]')).to_have_value('')
     # 확인 모달이 열린 사이 마감: 저장 거부
     page.goto(BASE)
     page.locator('#nextWeek').click()
