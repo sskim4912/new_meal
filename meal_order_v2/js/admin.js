@@ -17,6 +17,8 @@ let unlocked = false,
   detailRows = [],
   query = null,
   queryVersion = 0;
+const selectedIds = new Set();
+let deleting = false;
 const groupLabel = (value) => CONFIG.groups[value] ?? value;
 const mealLabel = (value) => CONFIG.meals[value] ?? value;
 const label = (field, value) =>
@@ -49,6 +51,9 @@ function renderDetails() {
         "ko",
       ),
     );
+  const visibleIds = new Set(detailRows.map((row) => row.id));
+  for (const id of selectedIds)
+    if (!visibleIds.has(id)) selectedIds.delete(id);
   const headers = [
     "날짜",
     "구분",
@@ -61,15 +66,31 @@ function renderDetails() {
     "수량",
     "단가",
     "금액",
-    "삭제",
   ];
   if (!detailRows.length) {
     $("detailTable").innerHTML =
       '<p class="empty">조회된 신청 내역이 없습니다.</p>';
+    updateSelection();
     return;
   }
   $("detailTable").innerHTML =
-    `<table><thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}</tr></thead><tbody>${detailRows.map((row, i) => `<tr>${[row.date, groupLabel(row.group), row.company || "—", row.empId || "—", row.name, mealLabel(row.meal), row.location || "—", row.menu, row.menu === CONFIG.noOrder ? 0 : 1, money(price(row.menu)), money(price(row.menu))].map((value) => `<td>${esc(value)}</td>`).join("")}<td><button class="danger" data-delete="${i}">삭제</button></td></tr>`).join("")}</tbody></table>`;
+    `<table><thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}<th scope="col"><label class="delete-choice"><input id="selectAllDetails" type="checkbox" aria-label="현재 상세 내역 전체 선택" />삭제</label></th></tr></thead><tbody>${detailRows.map((row, i) => `<tr>${[row.date, groupLabel(row.group), row.company || "—", row.empId || "—", row.name, mealLabel(row.meal), row.location || "—", row.menu, row.menu === CONFIG.noOrder ? 0 : 1, money(price(row.menu)), money(price(row.menu))].map((value) => `<td>${esc(value)}</td>`).join("")}<td><div class="delete-choice"><input type="checkbox" data-select="${i}" aria-label="${esc(`${row.date} ${row.name} ${mealLabel(row.meal)} 선택`)}" ${selectedIds.has(row.id) ? "checked" : ""} /><button class="danger" data-delete="${i}">삭제</button></div></td></tr>`).join("")}</tbody></table>`;
+  updateSelection();
+}
+function updateSelection() {
+  const all = $("selectAllDetails");
+  if (all) {
+    all.checked = detailRows.length > 0 && selectedIds.size === detailRows.length;
+    all.indeterminate = selectedIds.size > 0 && selectedIds.size < detailRows.length;
+    all.disabled = deleting;
+  }
+  $("deleteSelected").disabled = deleting || !unlocked || !selectedIds.size;
+  $("deleteSelected").textContent = deleting
+    ? "삭제 중…"
+    : `선택 삭제 (${selectedIds.size.toLocaleString("ko-KR")}건)`;
+  $("detailTable").querySelectorAll("[data-select], [data-delete]").forEach((el) => {
+    el.disabled = deleting;
+  });
 }
 function render() {
   const actual = actualOrders(rows);
@@ -136,6 +157,7 @@ async function refresh() {
     const all = await storage.getAllOrders();
     if (version !== queryVersion || !unlocked) return;
     rows = filterOrders(all, next);
+    selectedIds.clear();
     query = next;
     render();
     status(
@@ -179,6 +201,8 @@ $("logoutButton").addEventListener("click", () => {
   queryVersion++;
   rows = [];
   detailRows = [];
+  selectedIds.clear();
+  updateSelection();
   query = null;
   $("adminContent").hidden = true;
   $("loginButton").hidden = false;
@@ -200,9 +224,46 @@ $("viewMode").addEventListener("change", () => {
 );
 $("queryButton").addEventListener("click", refresh);
 $("detailSearch").addEventListener("input", renderDetails);
+$("detailTable").addEventListener("change", (event) => {
+  if (!unlocked || deleting) return;
+  if (event.target.id === "selectAllDetails") {
+    for (const row of detailRows) {
+      if (event.target.checked) selectedIds.add(row.id);
+      else selectedIds.delete(row.id);
+    }
+    renderDetails();
+  } else if (event.target.matches("[data-select]")) {
+    const row = detailRows[Number(event.target.dataset.select)];
+    if (!row) return;
+    if (event.target.checked) selectedIds.add(row.id);
+    else selectedIds.delete(row.id);
+    updateSelection();
+  }
+});
+$("deleteSelected").addEventListener("click", async () => {
+  if (!unlocked || deleting || !selectedIds.size) return;
+  const ids = [...selectedIds];
+  if (!(await confirmAction(
+    "선택 신청 삭제",
+    `선택한 신청 ${ids.length.toLocaleString("ko-KR")}건을 삭제할까요?\n삭제된 데이터는 복구할 수 없습니다.`,
+  )) || !unlocked) return;
+  deleting = true;
+  updateSelection();
+  try {
+    await storage.deleteOrders(ids);
+    await refresh();
+    if (unlocked) status("adminStatus", `선택한 신청 ${ids.length.toLocaleString("ko-KR")}건을 삭제했습니다.`);
+  } catch (error) {
+    if (error.partialDeletion) await refresh();
+    if (unlocked) fail(error);
+  } finally {
+    deleting = false;
+    updateSelection();
+  }
+});
 $("detailTable").addEventListener("click", async (event) => {
   const button = event.target.closest("[data-delete]");
-  if (!unlocked || !button) return;
+  if (!unlocked || deleting || !button) return;
   const row = detailRows[Number(button.dataset.delete)];
   if (
     !(await confirmAction(
@@ -221,7 +282,7 @@ $("detailTable").addEventListener("click", async (event) => {
 });
 $("resetAll").addEventListener("click", async () => {
   if (
-    !unlocked ||
+    !unlocked || deleting ||
     !(await confirmAction(
       "전체 신청 초기화",
       "모든 신청 내역을 삭제합니다.\n삭제된 데이터는 복구할 수 없습니다.\n\n계속할까요?",

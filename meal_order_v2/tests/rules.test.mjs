@@ -121,6 +121,9 @@ test("storage upserts, cancellation, profile separation, corruption and write fa
   await storage.saveProfiles({ gs: { name: "김" } });
   await storage.deleteOrder("2");
   assert.equal((await storage.getAllOrders()).length, 1);
+  await storage.upsertOrders([{ id: "2" }, { id: "3" }]);
+  await storage.deleteOrders(["1", "3", "3"]);
+  assert.deepEqual((await storage.getAllOrders()).map(row => row.id), ["2"]);
   await storage.resetOrders();
   assert.equal((await storage.getProfiles()).gs.name, "김");
   map.set("aurora.v2.orders", "broken");

@@ -9,6 +9,7 @@ import {
   setDoc,
   getDocs,
   deleteDoc,
+  terminate,
   serverTimestamp,
 } from "firebase/firestore";
 import { FIREBASE } from "../js/firebase-config.js";
@@ -16,6 +17,7 @@ import { CONFIG } from "../js/config.js";
 import { normalizeProfile, requesterKey, orderId } from "../js/meal-rules.js";
 import * as storage from "../js/storage.js";
 import { closeFirestore } from "../js/firestore-storage.js";
+import { addDays } from "../js/utils.js";
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
   test(
     "Firestore integration requires emulator (run test:firestore)",
@@ -43,6 +45,7 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
   connectFirestoreEmulator(db, host, Number(port));
   const orders = collection(db, FIREBASE.collection);
   test.after(async () => {
+    await terminate(db);
     await deleteApp(app);
     await closeFirestore();
   });
@@ -84,6 +87,22 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
     assert.equal((await getDocs(orders)).size, 1);
     await storage.resetOrders();
     assert.equal((await getDocs(orders)).size, 0);
+  });
+  test("Firestore: selected deletion spans batches and preserves unselected orders", async () => {
+    const entries = Array.from({ length: 452 }, (_, index) => {
+      const date = addDays("2099-10-12", index);
+      return { ...row("lunch", "백반", "OSBL"), date, id: orderId(key, date, "lunch") };
+    });
+    await storage.upsertOrders(entries.slice(0, 450));
+    await storage.upsertOrders(entries.slice(450));
+    const ids = entries.slice(0, 451).map(entry => entry.id);
+    await storage.deleteOrders([...ids, ids[0]]);
+    const remaining = await getDocs(orders);
+    assert.equal(remaining.size, 1);
+    assert.equal(remaining.docs[0].data().id, entries[451].id);
+    await storage.deleteOrders([]);
+    assert.equal((await getDocs(orders)).size, 1);
+    await storage.resetOrders();
   });
   test("Firestore rules reject invalid input, expired orders, and unrelated collections", async () => {
     const good = row("lunch", "백반", "사무실");

@@ -16,6 +16,9 @@ export async function upsertOrders(changes) {
 export async function deleteOrder(id) {
   return (await orderStore()).deleteOrder(id);
 }
+export async function deleteOrders(ids) {
+  return (await orderStore()).deleteOrders(ids);
+}
 export async function resetOrders() {
   return (await orderStore()).resetOrders();
 }

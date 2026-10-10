@@ -95,6 +95,26 @@ export async function resetOrders() {
   }
 }
 
+export async function deleteOrders(ids) {
+  const unique = [...new Set(ids)];
+  if (!unique.length) return;
+  const { sdk, db, orders } = await connect();
+  let deleted = 0;
+  try {
+    for (let i = 0; i < unique.length; i += 450) {
+      const chunk = unique.slice(i, i + 450);
+      const batch = sdk.writeBatch(db);
+      for (const id of chunk)
+        batch.delete(sdk.doc(orders, await documentId(id)));
+      await batch.commit();
+      deleted += chunk.length;
+    }
+  } catch (error) {
+    if (deleted) error.partialDeletion = true;
+    throw error;
+  }
+}
+
 // 테스트 종료 시 SDK의 네트워크 연결을 정리합니다.
 export async function closeFirestore() {
   if (!connection) return;

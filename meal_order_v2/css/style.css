@@ -42,6 +42,19 @@ footer {
   align-items: center;
   gap: 18px;
 }
+.delete-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  margin: 0;
+}
+.delete-choice input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+}
 .brand > a {
   display: flex;
   flex-shrink: 0;

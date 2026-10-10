@@ -38,6 +38,10 @@ export async function deleteOrder(id) {
 export async function resetOrders() {
   localStorage.removeItem(ORDERS);
 }
+export async function deleteOrders(ids) {
+  const selected = new Set(ids);
+  write(ORDERS, (await getAllOrders()).filter((row) => !selected.has(row.id)));
+}
 export async function getProfiles() {
   return read(PROFILES, {});
 }
