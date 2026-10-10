@@ -7,7 +7,8 @@ export const escapeHTML = (value) =>
         c
       ],
   );
-export const money = (value) => `${Number(value).toLocaleString("ko-KR")}원`;
+export const formatNumber = (value) => Number(value).toLocaleString("ko-KR");
+export const money = (value) => `${formatNumber(value)}원`;
 export function kstToday(now = new Date()) {
   return new Date(now.getTime() + 9 * 3600000).toISOString().slice(0, 10);
 }

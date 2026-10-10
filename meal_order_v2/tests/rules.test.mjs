@@ -149,3 +149,13 @@ test("Monday breakfast is not offered; Tuesday breakfast remains available", () 
     /메뉴/,
   );
 });
+
+test("2027 holiday calendar includes lunar and substitute holidays", () => {
+  assert.equal(Object.keys(CONFIG.holidays).length, 24);
+  assert.equal(CONFIG.holidays["2027-02-09"], "설날 대체공휴일");
+  assert.equal(CONFIG.holidays["2027-05-03"], "노동절 대체공휴일");
+  assert.equal(CONFIG.holidays["2027-07-19"], "제헌절 대체공휴일");
+  assert.equal(CONFIG.holidays["2027-09-15"], "추석");
+  assert.equal(CONFIG.holidays["2027-12-27"], "성탄절 대체공휴일");
+  assert.equal(CONFIG.holidays["2027-06-07"], undefined);
+});

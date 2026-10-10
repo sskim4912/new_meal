@@ -478,3 +478,39 @@ footer {
     gap: 5px;
   }
 }
+
+.day-head.holiday h2,
+.day-head.holiday span,
+.holiday-name {
+  color: var(--red);
+}
+.holiday-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+.brand .weekly-greeting {
+  color: var(--green);
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 360px;
+}
+@media (max-width: 520px) {
+  .header {
+    align-items: flex-start;
+  }
+  .brand {
+    min-width: 0;
+    align-items: flex-start;
+  }
+  .brand img {
+    flex-shrink: 0;
+  }
+  .brand .weekly-greeting {
+    font-size: 12px;
+    max-width: 190px;
+  }
+  .header > .button {
+    flex-shrink: 0;
+  }
+}

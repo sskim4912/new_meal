@@ -12,7 +12,12 @@
       <div class="header">
         <div class="brand">
           <img src="assets/gs-logo.jpeg" alt="GS건설 로고" />
-          <div><strong>Aurora Project</strong><span>현장 식사 신청</span></div>
+          <div>
+            <strong>Aurora Project</strong><span>현장 식사 신청</span
+            ><span id="weeklyGreeting" class="weekly-greeting"
+              >이번 주도 든든한 식사와 함께하세요.</span
+            >
+          </div>
         </div>
         <a class="button" href="admin.html">관리자</a>
       </div>
@@ -65,7 +70,8 @@
       </section>
       <div class="notice">
         한국시간 기준 · 조식 전일 13:00 / 중식 당일 09:00 / 석식 당일 13:00
-        마감<br />신청 내역은 Firebase에 저장되어 다른 기기의 관리자 화면에서도 조회할 수 있습니다.
+        마감<br />신청 내역은 Firebase에 저장되어 다른 기기의 관리자 화면에서도
+        조회할 수 있습니다.
       </div>
       <nav class="weekbar" aria-label="신청 주간">
         <button id="prevWeek">‹ 이전 주</button><strong id="weekLabel"></strong
@@ -81,7 +87,9 @@
         <p id="saveStatus" class="status" aria-live="polite"></p>
       </section>
     </main>
-    <footer>Aurora Project · 식사 신청 V2 <span>Firebase 저장 버전</span></footer>
+    <footer>
+      Aurora Project · 식사 신청 V2 <span>Firebase 저장 버전</span>
+    </footer>
     <dialog id="confirmDialog">
       <h2 id="confirmTitle"></h2>
       <p id="confirmText" class="confirm-text"></p>

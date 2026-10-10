@@ -3,6 +3,7 @@ import {
   $,
   escapeHTML as esc,
   money,
+  formatNumber,
   kstToday,
   status,
   confirmAction,
@@ -254,6 +255,7 @@ $("csvButton").addEventListener("click", () => {
       "장소",
       "메뉴",
       "단가",
+      "금액",
     ],
     actual.map((row) => [
       row.date,
@@ -264,7 +266,8 @@ $("csvButton").addEventListener("click", () => {
       mealLabel(row.meal),
       row.location,
       row.menu,
-      price(row.menu),
+      formatNumber(price(row.menu)),
+      formatNumber(price(row.menu)),
     ]),
   );
 });

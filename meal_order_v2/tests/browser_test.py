@@ -1,5 +1,7 @@
 """실행: python3 tests/browser_test.py (서버 8000, Python Playwright + Chromium 필요)"""
 import os
+import csv
+import io
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -107,6 +109,10 @@ with sync_playwright() as p:
         raw=path.read_bytes(); assert raw.startswith(b'\xef\xbb\xbf')
         text=raw.decode('utf-8-sig'); assert '협력사 신청자' in text and '신청 안 함' not in text
         assert len(text.splitlines())==4
+        cells=list(csv.reader(io.StringIO(text)))
+        assert cells[0][-2:]==['단가','금액']
+        assert all(len(row)==10 for row in cells)
+        assert all(row[-1] in ['8,000','9,000'] and row[-2]==row[-1] for row in cells[1:])
     page.locator('#detailTable [data-delete]').first.click()
     page.locator('#confirmDialog button[value="no"]').click()
     expect(page.locator('#detailTable tbody tr')).to_have_count(2)
@@ -176,5 +182,26 @@ with sync_playwright() as p:
     extra.locator('#loadButton').click()
     expect(extra.locator('#employeeStatus')).to_contain_text('저장 공간')
     isolated.close()
+    # 공휴일 색상·대체공휴일 이름과 모바일 인사 문구를 별도 화면에서 검사합니다.
+    calendar_context=browser.new_context(viewport={'width':390,'height':850})
+    calendar_context.route('**/js/firebase-config.js',lambda route:route.fulfill(content_type='text/javascript',body="export const FIREBASE = { enabled: false };"))
+    calendar=calendar_context.new_page()
+    calendar.clock.install(time=datetime(2027,1,1,0,0,tzinfo=timezone.utc))
+    calendar.goto(BASE)
+    def card(date):
+        return calendar.locator(f'.day:has(#menu-{date}-lunch)')
+    expect(card('2027-01-01').locator('.holiday-name')).to_have_text('신정')
+    assert card('2027-01-01').locator('.day-head span').evaluate('(el)=>getComputedStyle(el).color')=='rgb(174, 52, 52)'
+    assert card('2027-01-02').locator('.holiday-name').count()==0
+    expect(calendar.locator('#weeklyGreeting')).to_contain_text('이번 주')
+    for width in [360,390,430]:
+        calendar.set_viewport_size({'width':width,'height':850})
+        assert calendar.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    calendar.evaluate("for(let i=0;i<18;i++)document.getElementById('nextWeek').click()")
+    expect(calendar.locator('#weekLabel')).to_contain_text('2027.05.03')
+    expect(card('2027-05-03').locator('.holiday-name')).to_have_text('노동절 대체공휴일')
+    expect(card('2027-05-05').locator('.holiday-name')).to_have_text('어린이날')
+    assert card('2027-05-04').locator('.holiday-name').count()==0
+    calendar_context.close()
     browser.close()
     print('PASS: 신청자 3종, 메뉴/장소, 저장·수정·취소·불러오기, 확인 취소, 마감 재검증, 관리자 필터/집계/검색/삭제/초기화/CSV, 모바일 360/390/430px; 브라우저 오류 0')
