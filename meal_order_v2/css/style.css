@@ -52,8 +52,11 @@ footer {
 .delete-choice input[type="checkbox"] {
   width: 18px;
   height: 18px;
+  min-height: 18px;
+  padding: 0;
   margin: 0;
   flex-shrink: 0;
+  accent-color: var(--green);
 }
 .brand > a {
   display: flex;
