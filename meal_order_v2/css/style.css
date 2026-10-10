@@ -504,6 +504,10 @@ footer {
   background: #fff1f1;
   border-color: #f0cccc;
 }
+.day.today {
+  background: #fff8dc;
+  border-color: #ead28a;
+}
 .day-head.holiday h2,
 .day-head.holiday span,
 .holiday-name {
