@@ -6,7 +6,7 @@
 ## Cloudflare 화면에서 배포
 
 1. Cloudflare 대시보드 → **Workers & Pages** → **Create application** → GitHub 저장소 가져오기(Import a repository).
-2. `sskim4912/new_meal` 선택. Worker 이름: `aurora-meal-sms`.
+2. `sskim4912/new_meal` 선택. Worker 이름: `new-meal-sms`.
 3. 고급 설정의 Root directory: `meal_order_v2/sms-worker`.
 4. Build command는 비워 두고 Deploy command: `npx wrangler deploy`.
 5. 배포 후 Worker → **Settings → Variables and Secrets → Add**에서 아래 4개를 **Secret** 유형으로 등록하고 적용합니다.
@@ -24,7 +24,7 @@ Durable Object 바인딩과 migration은 같은 파일을 통해 배포됩니다
 
 ## 관리자 화면 연결
 
-1. 배포된 Worker 주소 확인: `https://aurora-meal-sms.<계정 하위도메인>.workers.dev`.
+1. 배포된 Worker 주소 확인: `https://new-meal-sms.<계정 하위도메인>.workers.dev`.
 2. `meal_order_v2/js/sms-config.js`의 endpoint에 해당 주소 + `/send`를 입력합니다.
 3. GitHub main에 저장해 Pages 배포가 끝난 뒤 관리자 화면을 새로고침합니다.
 4. 조회 → **집계 문자 발송** → 수신번호와 `SMS_ADMIN_TOKEN` 입력 → 미리보기 확인 → 발송.

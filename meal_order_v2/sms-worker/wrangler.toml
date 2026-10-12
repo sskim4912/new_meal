@@ -1,6 +1,6 @@
-name = "aurora-meal-sms"
+name = "new-meal-sms"
 main = "worker.js"
-compatibility_date = "2026-10-13"
+compatibility_date = "2026-10-01"
 [vars]
 ALLOWED_ORIGIN = "https://sskim4912.github.io"
 [[durable_objects.bindings]]
