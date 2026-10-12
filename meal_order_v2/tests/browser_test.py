@@ -240,7 +240,7 @@ with sync_playwright() as p:
     def card(date):
         return calendar.locator(f'.day:has(#menu-{date}-lunch)')
     expect(card('2027-01-01').locator('.holiday-name')).to_have_text('신정')
-    assert card('2027-01-01').locator('.day-head span').evaluate('(el)=>getComputedStyle(el).color')=='rgb(174, 52, 52)'
+    assert card('2027-01-01').locator('.day-head > span').evaluate('(el)=>getComputedStyle(el).color')=='rgb(174, 52, 52)'
     # 오늘은 공휴일이어도 노란 배경이 우선이고 공휴일 글씨는 빨간색입니다.
     assert card('2027-01-01').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 248, 220)'
     assert card('2027-01-02').locator('.holiday-name').count()==0
