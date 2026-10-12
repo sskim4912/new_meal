@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/rules.test.mjs",
+    "test": "node --test tests/rules.test.mjs tests/sms.test.mjs",
     "build:firebase": "node scripts/build-firebase.mjs",
     "test:firestore": "firebase emulators:exec --project demo-aurora --only firestore \"node --test tests/firestore.test.mjs\"",
     "build:rules": "node scripts/build-firestore-rules.mjs",

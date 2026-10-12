@@ -1,3 +1,4 @@
+import { initSms } from "./sms-ui.js";
 import { CONFIG, price } from "./config.js";
 import {
   $,
@@ -93,6 +94,7 @@ function updateSelection() {
   });
 }
 function render() {
+  $("smsButton").disabled = !actualOrders(rows).length;
   const actual = actualOrders(rows);
   const amount = actual.reduce((sum, row) => sum + price(row.menu), 0);
   const period = query.mode === "day" ? query.date : query.month;
@@ -143,6 +145,7 @@ function render() {
 async function refresh() {
   if (!unlocked) return;
   const version = ++queryVersion;
+  $("smsButton").disabled = true;
   try {
     const next = {
       mode: $("viewMode").value,
@@ -198,6 +201,9 @@ $("passwordForm").addEventListener("submit", (event) => {
 });
 $("logoutButton").addEventListener("click", () => {
   unlocked = false;
+  $("smsButton").disabled = true;
+  $("smsDialog").close();
+  $("smsToken").value = "";
   queryVersion++;
   rows = [];
   detailRows = [];
@@ -332,4 +338,5 @@ $("csvButton").addEventListener("click", () => {
     ]),
   );
 });
+initSms(() => ({ unlocked, rows, query }));
 openLogin();

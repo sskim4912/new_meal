@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Aurora Project · 관리자 집계</title>
     <link rel="stylesheet" href="css/style.css" />
-    <script type="module" src="js/admin.js?v=20261013-home2"></script>
+    <script type="module" src="js/admin.js?v=20261013-sms1"></script>
     <script defer src="js/home.js?v=20261013-home2"></script>
   </head>
   <body>
@@ -48,6 +48,7 @@
           <div class="actions">
             <button id="queryButton" class="primary">조회</button
             ><button id="csvButton">CSV 다운로드</button
+            ><button id="smsButton" disabled>집계 문자 발송</button
             ><button id="logoutButton">관리자 잠금</button>
           </div>
           <p id="adminStatus" class="status" aria-live="polite"></p>
@@ -115,6 +116,16 @@
           ><button class="primary">확인</button>
         </div>
       </form>
+    </dialog>
+    <dialog id="smsDialog">
+      <h2>집계 문자 발송</h2>
+      <p class="subtle">현재 조회된 집계를 발송합니다. 신청자 이름과 사번은 포함하지 않습니다.</p>
+      <label>수신 휴대폰 번호<input id="smsPhone" type="tel" inputmode="tel" autocomplete="off" placeholder="01012345678" /></label>
+      <label>문자 발송 인증키<input id="smsToken" type="password" autocomplete="off" placeholder="서버에 설정한 문자 발송 인증키" /></label>
+      <label>발송 내용<textarea id="smsPreview" rows="12" readonly></textarea></label>
+      <p id="smsStatus" class="status" aria-live="polite"></p>
+      <p class="subtle">발송 비용이 발생합니다. 접수 완료는 휴대폰 수신 완료와 다릅니다.</p>
+      <div class="actions"><button id="closeSms" type="button">닫기</button><button id="sendSms" type="button" class="primary">문자 발송</button></div>
     </dialog>
     <dialog id="confirmDialog">
       <h2 id="confirmTitle"></h2>

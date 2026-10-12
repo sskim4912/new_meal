@@ -2,7 +2,7 @@
 
 현장 식사 신청과 관리자 집계를 기능별로 분리한 정적 웹 앱입니다. 기존 운영 `sskim4912/meal_order`는 변경하지 않고, 업무 흐름을 분석하여 새로 구현했습니다. 기존 GS건설 로고 자산만 사용했습니다.
 
-HTML + CSS + Vanilla JavaScript ES Module로 실행합니다. 화면은 GitHub Pages에 배포하며, 식사 신청은 Firebase Firestore에 저장합니다. Firebase Authentication, Solapi, 문자 발송과 별도 백엔드는 사용하지 않습니다. Firebase SDK 번들을 저장소에 포함하여 정적 호스팅에서 별도 빌드 없이 실행할 수 있습니다.
+HTML + CSS + Vanilla JavaScript ES Module로 실행합니다. 화면은 GitHub Pages에 배포하며, 식사 신청은 Firebase Firestore에 저장합니다. 식사 신청 저장은 Firebase Authentication 없이 동작합니다. 관리자 문자 발송은 별도 Cloudflare Worker를 통해 Solapi에 접수합니다. 서버 연결 설정 전에는 발송이 비활성화됩니다. Firebase SDK 번들을 저장소에 포함하여 정적 호스팅에서 별도 빌드 없이 실행할 수 있습니다.
 
 ## 실행
 
@@ -150,3 +150,7 @@ npm run check:firestore
 신청 화면에서 공휴일 카드 전체는 옅은 빨간색(#fff1f1)이고, 날짜와 요일은 빨간색이며 공휴일 이름이 함께 표시됩니다. 2026년 지방선거일도 포함합니다. 네이버 달력은 개발 환경의 네트워크 제한으로 직접 대조하지 못했습니다. 공휴일 자체가 신청을 차단하지는 않습니다. 일요일은 기존과 같이 화면에 표시하지 않습니다.
 
 상단은 GS건설 로고와 Aurora Project 제목을 표시하며 누르면 직원 입력 첫 화면을 새로 불러옵니다. CSV의 단가·금액은 천 단위 쉼표를 넣어 따옴표로 감싸며, 금액 내 쉼표 때문에 CSV 열이 나뉘지 않습니다. 금액은 한 신청당 수량 1 기준입니다.
+
+## 집계 문자 발송
+
+관리자 조회 결과를 문자로 미리보고 발송할 수 있습니다. 서버 및 새 API 키 설정은 [문자 서버 설정 안내](sms-worker/README.md)를 따르세요. 공개 HTML에 있던 기존 키는 재사용하지 않습니다.
