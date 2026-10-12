@@ -81,7 +81,8 @@ function renderDays() {
   $("days").innerHTML = Array.from({ length: 6 }, (_, i) => {
     const date = addDays(week, i);
     const holiday = CONFIG.holidays[date];
-    return `<article class="day${holiday ? " holiday" : ""}${date === today ? " today" : ""}"><div class="day-head ${holiday ? "holiday" : ""}"><h2>${["월요일", "화요일", "수요일", "목요일", "금요일", "토요일"][i]}</h2><span>${date.slice(5).replace("-", ".")}</span></div>${holiday ? `<p class="holiday-name">${esc(holiday)}</p>` : ""}${Object.entries(
+    const reconfirm = holiday && date >= "2026-10-01" && date <= "2027-12-31";
+    return `<article class="day${holiday ? " holiday" : ""}${date === today ? " today" : ""}"><div class="day-head ${holiday ? "holiday" : ""}"><div class="day-title"><h2>${["월요일", "화요일", "수요일", "목요일", "금요일", "토요일"][i]}</h2>${reconfirm ? '<span class="admin-reminder">[관리팀 신청 재확인]</span>' : ""}</div><span>${date.slice(5).replace("-", ".")}</span></div>${holiday ? `<p class="holiday-name">${esc(holiday)}</p>` : ""}${Object.entries(
       CONFIG.meals,
     )
       .map(([meal, label]) => {

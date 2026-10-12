@@ -254,6 +254,19 @@ label {
   margin: 0;
   font-size: 18px;
 }
+.day-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.day-title .admin-reminder {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.day-head > span {
+  flex-shrink: 0;
+}
 .day-head span {
   color: var(--muted);
   font-size: 14px;
