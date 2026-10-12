@@ -1,4 +1,4 @@
-import { SMS } from './sms-config.js';
+import { SMS } from './sms-config.js?v=20261013-connected';
 import { buildMealMessage, normalizePhone, requestSms } from './sms.js';
 import { $, status } from './utils.js';
 export function initSms(getState) {
