@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Aurora Project · 관리자 집계</title>
     <link rel="stylesheet" href="css/style.css" />
-    <script type="module" src="js/admin.js?v=20261013-connected"></script>
+    <script type="module" src="js/admin.js?v=20261013-session"></script>
     <script defer src="js/home.js?v=20261013-home2"></script>
   </head>
   <body>
@@ -49,6 +49,7 @@
             <button id="queryButton" class="primary">조회</button
             ><button id="csvButton">CSV 다운로드</button
             ><button id="smsButton" disabled>집계 문자 발송</button
+            ><button id="scheduleSmsButton">자동 발송 설정</button
             ><button id="logoutButton">관리자 잠금</button>
           </div>
           <p id="adminStatus" class="status" aria-live="polite"></p>
@@ -110,6 +111,8 @@
             autocomplete="off"
             required
         /></label>
+        <label>문자 발송 인증키 (선택)<input id="loginSmsToken" type="password" autocomplete="off" placeholder="문자를 보낼 경우 로그인 때 한 번 입력" /></label>
+        <p class="subtle">인증키는 이 로그인 동안만 사용하며, 발송할 때 다시 입력하지 않습니다.</p>
         <p id="passwordError" class="status error" aria-live="polite"></p>
         <div class="actions">
           <button type="button" id="closePassword">취소</button
@@ -117,11 +120,16 @@
         </div>
       </form>
     </dialog>
+    <dialog id="scheduleSmsDialog">
+      <h2>자동 발송 설정</h2>
+      <p>정해진 시간에 식사 신청 집계를 자동으로 보내는 기능을 준비 중입니다.</p>
+      <p class="subtle">추후 발송 시간, 수신번호, 집계 범위를 설정할 수 있습니다. 현재 예약된 발송은 없으며, 이 버튼으로 문자가 발송되지는 않습니다.</p>
+      <form method="dialog" class="actions"><button>닫기</button></form>
+    </dialog>
     <dialog id="smsDialog">
       <h2>집계 문자 발송</h2>
       <p class="subtle">현재 조회된 집계를 발송합니다. 신청자 이름과 사번은 포함하지 않습니다.</p>
       <label>수신 휴대폰 번호<input id="smsPhone" type="tel" inputmode="tel" autocomplete="off" placeholder="01012345678" /></label>
-      <label>문자 발송 인증키<input id="smsToken" type="password" autocomplete="off" placeholder="서버에 설정한 문자 발송 인증키" /></label>
       <label>발송 내용<textarea id="smsPreview" rows="12" readonly></textarea></label>
       <p id="smsStatus" class="status" aria-live="polite"></p>
       <p class="subtle">발송 비용이 발생합니다. 접수 완료는 휴대폰 수신 완료와 다릅니다.</p>

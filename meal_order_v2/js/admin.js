@@ -1,4 +1,4 @@
-import { initSms } from "./sms-ui.js?v=20261013-connected";
+import { initSms } from "./sms-ui.js?v=20261013-session";
 import { CONFIG, price } from "./config.js";
 import {
   $,
@@ -13,6 +13,7 @@ import {
 } from "./utils.js";
 import { aggregate, actualOrders, filterOrders } from "./aggregate.js";
 import * as storage from "./storage.js";
+let smsToken = "";
 let unlocked = false,
   rows = [],
   detailRows = [],
@@ -181,17 +182,21 @@ $("queryGroup").insertAdjacentHTML(
 );
 function openLogin() {
   $("password").value = "";
+  $("loginSmsToken").value = "";
   status("passwordError", "");
   $("passwordDialog").showModal();
 }
 $("loginButton").addEventListener("click", openLogin);
 $("closePassword").addEventListener("click", () => $("passwordDialog").close());
+$("passwordDialog").addEventListener("close", () => { $("password").value = ""; $("loginSmsToken").value = ""; });
 $("passwordForm").addEventListener("submit", (event) => {
   event.preventDefault();
   if ($("password").value !== CONFIG.adminPassword) {
     status("passwordError", "비밀번호를 확인해주세요.", true);
     return;
   }
+  smsToken = $("loginSmsToken").value.trim();
+  $("loginSmsToken").value = "";
   unlocked = true;
   $("password").value = "";
   $("passwordDialog").close();
@@ -203,7 +208,8 @@ $("logoutButton").addEventListener("click", () => {
   unlocked = false;
   $("smsButton").disabled = true;
   $("smsDialog").close();
-  $("smsToken").value = "";
+  $("scheduleSmsDialog").close();
+  smsToken = "";
   queryVersion++;
   rows = [];
   detailRows = [];
@@ -338,5 +344,8 @@ $("csvButton").addEventListener("click", () => {
     ]),
   );
 });
-initSms(() => ({ unlocked, rows, query }));
+$("scheduleSmsButton").addEventListener("click", () => {
+  if (unlocked) $("scheduleSmsDialog").showModal();
+});
+initSms(() => ({ unlocked, rows, query, smsToken }));
 openLogin();
