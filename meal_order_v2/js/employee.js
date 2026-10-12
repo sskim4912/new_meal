@@ -336,7 +336,6 @@ setInterval(() => {
 }, 30000);
 async function init() {
   const freshStart = new URLSearchParams(location.search).get("start") === "new";
-  $("weeklyGreeting").textContent = CONFIG.weeklyGreeting;
   renderIdentity();
   renderDays();
   try {

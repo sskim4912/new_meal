@@ -530,12 +530,6 @@ footer {
   font-weight: 600;
   margin: 8px 0 0;
 }
-.brand .weekly-greeting {
-  color: var(--green);
-  font-size: 13px;
-  line-height: 1.5;
-  max-width: 360px;
-}
 @media (max-width: 520px) {
   .header {
     align-items: flex-start;
@@ -546,10 +540,6 @@ footer {
   }
   .brand img {
     flex-shrink: 0;
-  }
-  .brand .weekly-greeting {
-    font-size: 12px;
-    max-width: 190px;
   }
   .header > .button {
     flex-shrink: 0;

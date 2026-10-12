@@ -251,7 +251,7 @@ with sync_playwright() as p:
     assert card('2026-12-24').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 255, 255)'
     calendar.screenshot(path='/tmp/aurora-holidays-2026.png',full_page=True)
     calendar.locator('#nextWeek').click()
-    expect(calendar.locator('#weeklyGreeting')).to_contain_text('이번 주')
+    expect(calendar.locator('.brand')).to_have_text('Aurora Project')
     for width in [360,390,430]:
         calendar.set_viewport_size({'width':width,'height':850})
         assert calendar.evaluate('document.documentElement.scrollWidth <= innerWidth')
