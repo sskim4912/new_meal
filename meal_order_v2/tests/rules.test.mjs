@@ -15,13 +15,17 @@ import { aggregate, filterOrders } from "../js/aggregate.js";
 import * as storage from "../js/local-storage.js";
 test("KST deadline boundaries, independent of host timezone", () => {
   for (const [meal, utc] of [
-    ["breakfast", "2026-10-09T04:00:00Z"],
+    ["breakfast", "2026-10-09T05:00:00Z"],
     ["lunch", "2026-10-10T00:00:00Z"],
-    ["dinner", "2026-10-10T04:00:00Z"],
+    ["dinner", "2026-10-10T05:00:00Z"],
   ]) {
     const t = Date.parse(utc);
     assert.equal(deadline("2026-10-10", meal), t);
     assert.equal(isClosed("2026-10-10", meal, t - 1), false);
+    if (meal !== "lunch") {
+      assert.equal(isClosed("2026-10-10", meal, t - 60 * 60 * 1000), false);
+      validateChange({ date: "2026-10-10", meal, menu: CONFIG.noOrder }, t - 1);
+    }
     assert.equal(isClosed("2026-10-10", meal, t), true);
     assert.throws(
       () =>

@@ -20,7 +20,7 @@ service cloud.firestore {
     function beforeDeadline(d) {
       let parts = d.date.split('-');
       let date = timestamp.date(int(parts[0]), int(parts[1]), int(parts[2]));
-      let minutes = d.meal == 'breakfast' ? -1200 : d.meal == 'lunch' ? 0 : 240;
+      let minutes = d.meal == 'breakfast' ? -1140 : d.meal == 'lunch' ? 0 : 300;
       return request.time < date + duration.value(minutes, 'm');
     }
     function validOrder(d) {

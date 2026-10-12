@@ -26,9 +26,9 @@ export const CONFIG = {
   unavailableWeekdays: { breakfast: [1] }, // 0=일요일, 1=월요일
   prices: { 백반: 8000, default: 9000 },
   deadlines: {
-    breakfast: { offsetDays: -1, time: "13:00" },
+    breakfast: { offsetDays: -1, time: "14:00" },
     lunch: { offsetDays: 0, time: "09:00" },
-    dinner: { offsetDays: 0, time: "13:00" },
+    dinner: { offsetDays: 0, time: "14:00" },
   },
   adminPassword: "230880",
 };
