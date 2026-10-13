@@ -1,0 +1,40 @@
+name: Verify actual 13–14 KST meal storage
+on:
+  schedule:
+    - cron: '20 4 14 10 *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: actual-meal-deadline-check
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Gate the one-time check to October 14, 2026
+        id: date
+        run: |
+          if [ "$(TZ=Asia/Seoul date +%F)" = "2026-10-14" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No test executed: this check is only scheduled for October 14, 2026."
+          fi
+      - uses: actions/checkout@v5
+        if: steps.date.outputs.run == 'true'
+      - uses: actions/setup-node@v5
+        if: steps.date.outputs.run == 'true'
+        with:
+          node-version: '22'
+      - name: Save and read actual dinner and next-day breakfast, then clean up
+        if: steps.date.outputs.run == 'true'
+        working-directory: meal_order_v2
+        run: node scripts/check-live-deadline.mjs
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.date.outputs.run == 'true'
+        with:
+          name: live-deadline-report
+          path: meal_order_v2/live-deadline-report.json
+          if-no-files-found: warn
