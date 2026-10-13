@@ -28,6 +28,9 @@ with sync_playwright() as p:
   else:
    page.locator('#smsPhone').fill('invalid');page.locator('#sendSms').click();expect(page.locator('#smsStatus')).to_contain_text('번호');assert not calls
    page.locator('#smsPhone').fill('01012345678');page.locator('#sendSms').click()
+   expect(page.locator('#confirmDialog')).to_be_visible();assert not calls
+   page.locator('#confirmDialog button[value="no"]').click();expect(page.locator('#sendSms')).to_be_enabled();assert not calls
+   page.locator('#sendSms').click();page.locator('#confirmDialog button[value="yes"]').click()
    expect(page.locator('#smsStatus')).to_contain_text('접수되었습니다' if outcome=='accepted' else '인증 실패')
    assert len(calls)==1;expect(page.locator('#sendSms')).to_be_disabled()
   page.locator('#closeSms').click();assert page.locator('#smsToken').count()==0

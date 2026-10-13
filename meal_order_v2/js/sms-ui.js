@@ -1,6 +1,6 @@
 import { SMS } from './sms-config.js?v=20261013-connected';
 import { buildMealMessage, normalizePhone, requestSms } from './sms.js';
-import { $, status } from './utils.js';
+import { $, status, confirmAction } from './utils.js';
 export function initSms(getState) {
   let busy=false;
   const requests=new Map();
@@ -22,8 +22,9 @@ export function initSms(getState) {
     let to;try{to=normalizePhone($('smsPhone').value);}catch(e){status('smsStatus',e.message,true);return;}
     const token=getState().smsToken,text=$('smsPreview').value;
     if(!token){status('smsStatus','관리자 로그인 때 문자 발송 인증키를 입력해주세요.',true);return;}
-    if(!window.confirm(`${to} 번호로 현재 집계를 발송할까요? 문자 발송 비용이 발생합니다.`))return;
     busy=true;$('sendSms').disabled=true;$('closeSms').disabled=true;
+    const confirmed=await confirmAction('문자 발송 확인',`${to} 번호로 현재 집계를 발송할까요?\n문자 발송 비용이 발생합니다.`);
+    if(!confirmed){busy=false;$('sendSms').disabled=false;$('closeSms').disabled=false;return;}
     status('smsStatus','발송 요청 중…');
     const key=JSON.stringify([to,text]),requestId=requests.get(key)??crypto.randomUUID();requests.set(key,requestId);
     try{

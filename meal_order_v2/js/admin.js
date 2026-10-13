@@ -1,4 +1,4 @@
-import { initSms } from "./sms-ui.js?v=20261013-session";
+import { initSms } from "./sms-ui.js?v=20261013-confirm2";
 import { CONFIG, price } from "./config.js";
 import {
   $,
