@@ -199,9 +199,14 @@ $("days").addEventListener("change", (event) => {
   };
   if (equal(state().baseline.get(key), row)) state().drafts.delete(key);
   else state().drafts.set(key, row);
-  const focusId = event.target.id;
-  renderDays();
-  if (focusId) $(focusId)?.focus();
+  if (meal === "lunch" && !location) {
+    const slot = event.target.closest(".slot");
+    const place = slot.querySelector(".location-label");
+    if (row.menu === CONFIG.noOrder) place?.remove();
+    else if (!place)
+      event.target.insertAdjacentHTML("afterend", `<label class="location-label">중식 장소<select data-location="true" data-date="${date}" data-meal="${meal}">${CONFIG.locations.map((value) => `<option ${value === row.location ? "selected" : ""}>${esc(value)}</option>`).join("")}</select></label>`);
+  }
+  updateCount();
   status("saveStatus", "");
 });
 async function loadOrders() {
@@ -332,7 +337,18 @@ window.addEventListener("beforeunload", (event) => {
   }
 });
 setInterval(() => {
-  if (!busy) renderDays();
+  if (busy) return;
+  $("days").querySelectorAll("select[data-date]").forEach((select) => {
+    const { date, meal } = select.dataset;
+    const closed = isClosed(date, meal);
+    const unavailable = isUnavailable(date, meal);
+    select.disabled = closed || unavailable;
+    const badge = select.closest(".slot").querySelector(".badge");
+    const saved = state().baseline.get(slotKey(date, meal));
+    badge.textContent = unavailable ? "미운영" : closed ? "마감" : saved && saved.menu !== CONFIG.noOrder ? "신청 완료" : "선택 가능";
+    badge.classList.toggle("closed", closed);
+    select.closest(".day").classList.toggle("today", date === kstToday());
+  });
 }, 30000);
 async function init() {
   const freshStart = new URLSearchParams(location.search).get("start") === "new";
