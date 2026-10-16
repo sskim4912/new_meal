@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VIP·본사출장 관리자 대리신청</title><link rel="stylesheet" href="css/style.css?v=admin-v2"><script type="module" src="js/vip.js?v=admin-v2"></script><script defer src="js/home.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VIP·본사출장 관리자 대리신청</title><link rel="stylesheet" href="css/style.css?v=admin-v2"><script type="module" src="js/vip.js?v=vip-selection-v3"></script><script defer src="js/home.js"></script></head>
 <body>
 <header><div class="header"><a class="brand" href="index.html?start=new" data-home aria-label="GS건설 로고 · 홈으로"><img src="assets/gs-logo.jpeg" alt="GS건설 로고"><strong>Aurora Project</strong></a><a class="button" href="admin.html">관리자 집계</a></div></header>
 <main><div class="page-heading"><h1>VIP·본사출장 대리신청</h1><p>중식 · 사무실 · 1인 1개 고정 / 식사일 10:00 전까지 신규·수정·취소 가능 (한국시간)</p></div>
 <button id="vipLogin">관리자 로그인</button>
 <div id="vipContent" hidden>
-<section class="panel"><div class="fields"><label>식사 날짜<input id="vipDate" type="date" required></label><label>장소<input value="사무실" readonly></label><label>식사<input value="중식" readonly></label></div><div class="actions"><button id="vipReload">기존 대리신청 조회</button><button id="vipLogout">관리자 로그아웃</button></div></section>
-<section class="panel"><div id="vipRows" class="table-wrap"></div><div class="actions"><button id="vipAdd">행 추가</button><button id="vipSubmit" class="primary">신청 내역 제출</button></div><p class="subtle">기존 VIP 신청은 관리자 집계에서 확인할 수 있습니다. 이 화면에는 새 관리자 대리신청만 표시됩니다.</p></section></div>
+<section class="panel"><div class="fields"><label>식사 날짜<input id="vipDate" type="date" required></label><label>대리입력자 이름<input id="vipOperator" maxlength="40" autocomplete="name" placeholder="대리입력자 이름 입력"></label><label>장소<input value="사무실" readonly></label><label>식사<input value="중식" readonly></label></div><div class="actions"><button id="vipReload">기존 대리신청 조회</button><button id="vipLogout">관리자 로그아웃</button></div></section>
+<section class="panel"><p class="subtle">대리입력자 이름을 먼저 입력하면 새 행에 자동 적용됩니다. 저장된 신청은 수정 버튼으로 편집하며, 수량은 이름 한 명당 1개로 고정됩니다.</p><div class="actions"><label><input id="vipSelectAll" type="checkbox"> 전체 선택</label><span id="vipSelectedCount" aria-live="polite">선택 0건</span><button id="vipDeleteSelected" class="danger" disabled>선택 삭제</button></div><div id="vipRows" class="table-wrap"></div><div class="actions"><button id="vipAdd">행 추가</button><button id="vipSubmit" class="primary">신청 내역 제출</button></div><p class="subtle">기존 VIP 신청은 관리자 집계에서 확인할 수 있습니다. 이 화면에는 새 관리자 대리신청만 표시됩니다.</p></section></div>
 <p id="vipStatus" class="status" aria-live="polite"></p>
 <dialog id="confirmDialog"><h2 id="confirmTitle"></h2><p id="confirmText" class="confirm-text"></p><form method="dialog" class="actions"><button value="no">취소</button><button value="yes" class="primary">확인 후 계속</button></form></dialog>
 </main></body></html>

@@ -52,7 +52,7 @@ export async function proxySave(env, body) {
   const rows = body.rows.map(input => {
     if (!/^proxy:[a-f0-9-]{36}$/i.test(input.id || '') || unique.has(input.id)) throw new ApiError('신청 식별자가 중복되거나 올바르지 않습니다.');
     unique.add(input.id);
-    const row = { id: input.id, requesterKey: JSON.stringify(['vip-proxy', input.id]), group: 'vip', empId: '', phone: '', company: String(input.company || '').trim(), name: String(input.name || '').trim(), date: input.date, meal: 'lunch', location: '사무실', menu: input.menu, source: PROXY_SOURCE, quantity: 1 };
+    const row = { id: input.id, requesterKey: JSON.stringify(['vip-proxy', input.id]), group: 'vip', empId: '', phone: '', company: String(input.company || '').trim(), name: String(input.name || '').trim(), date: input.date, meal: 'lunch', location: '사무실', menu: input.menu, source: PROXY_SOURCE, quantity: 1, operatorName: String(input.operatorName || '').trim() };
     checkProxy(row); return row;
   });
   const all = await allOrders(env);

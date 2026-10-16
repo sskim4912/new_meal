@@ -10,6 +10,8 @@ export function validateProxy(row, now = Date.now()) {
     throw new Error('관리자 대리신청은 중식·사무실·수량 1만 가능합니다.');
   if (!String(row.company || '').trim() || row.company.length > 80 || !String(row.name || '').trim() || row.name.length > 40)
     throw new Error('소속과 이름을 입력해주세요.');
+  if (row.operatorName !== undefined && (typeof row.operatorName !== 'string' || !row.operatorName.trim() || row.operatorName.length > 40))
+    throw new Error('대리입력자 이름을 40자 이내로 입력해주세요.');
   if (row.empId !== '' || row.phone !== '') throw new Error('대리신청의 사번·연락처는 비워주세요.');
 }
 export function duplicateOrders(rows, candidate) {

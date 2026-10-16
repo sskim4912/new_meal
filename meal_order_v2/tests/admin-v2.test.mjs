@@ -19,7 +19,7 @@ function setup() {
   return {env,actor};
 }
 const req=(path,body)=>new Request('https://worker.example'+path,{method:'POST',body:JSON.stringify(body)});
-const candidate=(date='2026-10-16')=>({id:'proxy:11111111-1111-4111-8111-111111111111',requesterKey:'proxy-person',date,group:'vip',company:'본사',name:'동명이인',empId:'',phone:'',meal:'lunch',menu:'백반',location:'사무실',source:PROXY_SOURCE,quantity:1});
+const candidate=(date='2026-10-16')=>({id:'proxy:11111111-1111-4111-8111-111111111111',requesterKey:'proxy-person',date,group:'vip',company:'본사',name:'동명이인',operatorName:'김담당',empId:'',phone:'',meal:'lunch',menu:'백반',location:'사무실',source:PROXY_SOURCE,quantity:1});
 test('admin password is verified on server; sessions expire and logout revokes; brute force is limited',async()=>{
   const {actor}=setup();
   for(let i=0;i<5;i++)assert.equal((await actor.fetch(req('/login',{password:'wrong',ip:'bad'}))).status,401);
@@ -40,7 +40,7 @@ test('VIP lunch has a 10:00 cutoff, normal lunch stays at 09:00; invalid locatio
   assert.throws(()=>validateChange(candidate(),before),/마감/);
   assert.throws(()=>validateProxy(candidate(),at),/10:00/);
   validateProxy(candidate('2026-10-17'),at);
-  for(const change of [{quantity:2},{location:'OSBL'},{meal:'dinner'},{source:'direct'},{date:'2026-10-15'}])assert.throws(()=>validateProxy({...candidate(),...change},before));
+  for(const change of [{quantity:2},{operatorName:''},{operatorName:' '.repeat(3)},{operatorName:'가'.repeat(41)},{operatorName:123},{location:'OSBL'},{meal:'dinner'},{source:'direct'},{date:'2026-10-15'}])assert.throws(()=>validateProxy({...candidate(),...change},before));
 });
 test('proxy endpoint warns about duplicates without writing, then uses server Firebase credentials after acknowledgement',async()=>{
   const originalFetch=globalThis.fetch,now=Date.now;
@@ -51,11 +51,12 @@ test('proxy endpoint warns about duplicates without writing, then uses server Fi
   globalThis.fetch=async(url,options)=>{
     if(String(url).includes('signInWithPassword'))return Response.json({idToken:'server-only-firebase-token',expiresIn:'3600'});
     if(String(url).endsWith(':runQuery'))return Response.json([{document:{fields}}]);
-    if(String(url).endsWith(':commit')){assert.equal(options.headers.Authorization,'Bearer server-only-firebase-token');commits++;return Response.json({writeResults:[{}]});}
+    if(String(url).endsWith(':commit')){const payload=JSON.parse(options.body);assert.equal(payload.writes[0].update.fields.operatorName.stringValue,'김담당');assert.equal(payload.writes[0].update.fields.quantity.integerValue,'1');assert.equal(options.headers.Authorization,'Bearer server-only-firebase-token');commits++;return Response.json({writeResults:[{}]});}
     throw new Error('Unexpected request');
   };
   try{
     const env={FIREBASE_ADMIN_EMAIL:'test@example.test',FIREBASE_ADMIN_PASSWORD:'test-only'};
+    await assert.rejects(proxySave(env,{rows:[{...candidate(),operatorName:undefined}]}),/대리입력자/);assert.equal(commits,0);
     const warned=await proxySave(env,{rows:[candidate()]});assert.equal(warned.duplicates.length,1);assert.equal(commits,0);
     assert.equal((await proxySave(env,{rows:[candidate()],confirmDuplicates:true})).saved,1);assert.equal(commits,1);
     assert.throws(()=>validateProxy({...candidate(),location:'ISBL'},Date.now()));
