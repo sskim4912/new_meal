@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>VIP·본사출장 대리신청</title>
+  <title>VIP·본사출장자 식사 대리신청</title>
   <link rel="stylesheet" href="css/style.css?v=vip-layout-v6">
   <link rel="stylesheet" href="css/vip.css?v=vip-layout-v6">
   <script type="module" src="js/vip.js?v=vip-layout-v6"></script><script defer src="js/home.js"></script>
@@ -10,11 +10,11 @@
 <body class="vip-page">
 <header><div class="header"><a class="brand" href="index.html?start=new" data-home aria-label="GS건설 로고 · 홈으로"><img src="assets/gs-logo.jpeg" alt="GS건설 로고"><strong>Aurora Project</strong></a><div class="vip-header-actions"><a class="button" href="admin.html">관리자 집계</a><button id="vipLogout" hidden>로그아웃</button></div></div></header>
 <main>
-  <div class="page-heading"><h1>VIP·본사출장 대리신청</h1><p>신청은 위에서 작성하고, 저장된 내역은 아래에서 확인하세요.</p></div>
+  <div class="page-heading"><h1>VIP·본사출장자 식사 대리신청</h1><p>신청은 위에서 작성하고, 저장된 내역은 아래에서 확인하세요.</p></div>
   <button id="vipLogin" class="primary">관리자 로그인</button>
   <div id="vipContent" hidden>
     <section class="panel vip-section" aria-labelledby="vipNewTitle">
-      <div class="vip-section-heading"><div><h2 id="vipNewTitle">신규 대리신청</h2><p>식사일 오전 10:00 전까지 신청할 수 있습니다. (한국시간)</p></div><div class="vip-badges"><span>사무실</span><span>중식</span><span>1인 1식</span></div></div>
+      <div class="vip-section-heading"><div><h2 id="vipNewTitle">중식 대리신청</h2><p>식사일 오전 10:00 전까지 신청할 수 있습니다. (한국시간)</p></div><div class="vip-badges"><span>사무실</span><span>중식</span><span>1인 1식</span></div></div>
       <div class="vip-form-fields"><label for="vipDate">식사 날짜<input id="vipDate" type="date" required></label><label for="vipOperator">대리입력자 이름<input id="vipOperator" maxlength="10" autocomplete="name" placeholder="이름 입력 (최대 10자)"></label></div>
       <p id="vipNewDeadline" class="vip-deadline" hidden>선택한 식사일의 신청이 마감되었습니다. 다음 날짜를 선택해 주세요.</p>
       <div id="vipDraftRows" class="vip-table-wrap"></div>
