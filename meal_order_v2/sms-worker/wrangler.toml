@@ -6,6 +6,12 @@ ALLOWED_ORIGIN = "https://sskim4912.github.io"
 [[durable_objects.bindings]]
 name = "REQUESTS"
 class_name = "SmsRequest"
+[[durable_objects.bindings]]
+name = "ADMIN"
+class_name = "AdminState"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["SmsRequest"]
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["AdminState"]

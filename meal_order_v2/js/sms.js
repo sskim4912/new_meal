@@ -1,4 +1,5 @@
 import { CONFIG, price } from './config.js';
+import { expireSession } from './admin-session.js';
 import { actualOrders, aggregate } from './aggregate.js';
 export function normalizePhone(value) {
   const phone = String(value).replace(/[\s()-]/g, '');
@@ -24,12 +25,13 @@ export function buildMealMessage(rows, query) {
   if (new TextEncoder().encode(text).length>2000) throw new Error('문자 내용이 너무 깁니다. 일별 또는 신청자 구분으로 조회 범위를 줄여주세요.');
   return text;
 }
-export async function requestSms({ endpoint, token, to, text, requestId }, fetcher=fetch) {
+export async function requestSms({ endpoint, token, to, text, requestId, reportId }, fetcher=fetch) {
   const url=new URL(endpoint);
   if (url.protocol!=='https:' || url.username || url.password) throw new Error('HTTPS 문자 서버 주소를 설정해주세요.');
-  const response=await fetcher(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({to:normalizePhone(to),text,requestId}),signal:AbortSignal.timeout(25000)});
+  const response=await fetcher(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({to:normalizePhone(to),text,requestId,...(reportId ? {reportId} : {})}),signal:AbortSignal.timeout(25000)});
   let data;
   try { data=await response.json(); } catch { throw new Error('서버 응답을 확인할 수 없습니다. 자동 재발송하지 말고 솔라피 발송 내역을 확인해주세요.'); }
+  if (response.status===401) expireSession();
   if (!response.ok || data.status!=='accepted') throw new Error(data.error || '발송 접수를 확인하지 못했습니다. 솔라피 발송 내역을 확인해주세요.');
   return data;
 }
