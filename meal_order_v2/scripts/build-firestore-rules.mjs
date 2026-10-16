@@ -53,7 +53,8 @@ service cloud.firestore {
     function validProxy(d) {
       return isAdmin() && isProxy(d)
         && d.keys().hasAll(['id','requesterKey','group','empId','company','name','phone','date','meal','menu','location','updatedAt','source','quantity'])
-        && d.keys().hasOnly(['id','requesterKey','group','empId','company','name','phone','date','meal','menu','location','updatedAt','source','quantity'])
+        && d.keys().hasOnly(['id','requesterKey','group','empId','company','name','phone','date','meal','menu','location','updatedAt','source','quantity','operatorName'])
+        && (!('operatorName' in d) || (d.operatorName is string && d.operatorName.size() >= 1 && d.operatorName.size() <= 40))
         && d.id is string && d.id.matches('^proxy:[A-Fa-f0-9-]{36}$')
         && d.requesterKey is string && d.requesterKey.size() <= 500
         && d.name is string && d.name.size() >= 1 && d.name.size() <= 40

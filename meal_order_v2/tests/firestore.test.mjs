@@ -159,7 +159,9 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
       await assert.rejects(setDoc(adminRef, proxy), e => e.code === 'permission-denied');
       const provision = await fetch(`http://${host}:${port}/v1/projects/demo-aurora/databases/(default)/documents/aurora_v2_admins/${credential.user.uid}`, { method: 'PATCH', headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { enabled: { booleanValue: true } } }) });
       assert.equal(provision.status, 200);
-      await setDoc(adminRef, proxy);
+      await setDoc(adminRef, proxy); // Legacy rows without an operator remain valid.
+      await setDoc(adminRef, { ...proxy, operatorName: '김담당' });
+      for (const operatorName of ['', '가'.repeat(41), 123]) await assert.rejects(setDoc(adminRef, { ...proxy, operatorName }), e => e.code === 'permission-denied');
       await assert.rejects(setDoc(publicRef, { ...proxy, name: '변조' }), e => e.code === 'permission-denied');
       await assert.rejects(deleteDoc(publicRef), e => e.code === 'permission-denied');
       await assert.rejects(setDoc(adminRef, { ...proxy, quantity: 2 }), e => e.code === 'permission-denied');
