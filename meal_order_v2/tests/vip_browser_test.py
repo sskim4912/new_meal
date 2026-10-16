@@ -111,6 +111,7 @@ with sync_playwright() as p:
  page.clock.set_fixed_time(datetime(2026,10,16,1,0,tzinfo=timezone.utc));page.clock.fast_forward(31000)
  expect(page.locator('#vipSubmit')).to_be_disabled()
  expect(page.locator('#vipDeleteSelected')).to_be_disabled()
+ expect(page.locator('#vipOperator')).to_be_enabled()
  page.locator('#vipDate').fill('2026-10-20');page.locator('#vipDate').dispatch_event('change')
  expect(page.locator('#vipSubmit')).to_be_enabled()
  expect(page.locator('#vipSelectedCount')).to_have_text('선택 0건')
@@ -140,4 +141,33 @@ with sync_playwright() as p:
  assert '관리자 대리신청' in cells[1] and cells[1][-1]=='8,000'
  assert not errors,errors
  print('PASS: operator persistence, row edit/save/cancel, bulk selection/cancel/delete/error retention, draft removal, renumbering, date-scoped selection, quantity 1, duplicate warning, 10:00 lock, admin aggregation/CSV and mobile layout; no real writes/SMS')
+ # A new visit after today's cutoff must start on tomorrow, with an editable operator.
+ late=b.new_context(viewport={'width':1120,'height':900})
+ mock_admin_auth(late)
+ late.route('**/vip/*',api)
+ late_page=late.new_page()
+ late_page.clock.install(time=datetime(2026,10,16,1,0,tzinfo=timezone.utc))
+ late_page.goto(BASE+'/vip.html')
+ late_login=late_page.locator('dialog[open]')
+ late_login.locator('input').fill('230880');late_login.locator('button.primary').click()
+ expect(late_page.locator('#vipContent')).to_be_visible()
+ expect(late_page.locator('#vipDate')).to_have_value('2026-10-17')
+ expect(late_page.locator('#vipOperator')).to_be_enabled()
+ late_page.locator('#vipDate').fill('2026-10-16');late_page.locator('#vipDate').dispatch_event('change')
+ expect(late_page.locator('#vipSubmit')).to_be_disabled()
+ expect(late_page.locator('#vipOperator')).to_be_enabled()
+ late_page.locator('#vipOperator').press_sequentially('abcdefghijk')
+ expect(late_page.locator('#vipOperator')).to_have_value('abcdefghij')
+ late_page.locator('#vipDate').fill('2026-10-17');late_page.locator('#vipDate').dispatch_event('change')
+ expect(late_page.locator('#vipRows [data-field="operatorName"]').first).to_have_value('abcdefghij')
+ expect(late_page.locator('#vipSubmit')).to_be_enabled()
+ for width in [1120,820,430,390,360]:
+  late_page.set_viewport_size({'width':width,'height':900})
+  bounds=late_page.locator('.vip-fields input').evaluate_all('(inputs)=>inputs.map(input=>({width:input.getBoundingClientRect().width,height:input.getBoundingClientRect().height,top:input.getBoundingClientRect().top}))')
+  assert all(item['width']<=170 and item['height']<=40 for item in bounds),bounds
+  if width<=820:assert bounds[0]['top']==bounds[1]['top'] and bounds[2]['top']==bounds[3]['top'],bounds
+  assert late_page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+ late_page.screenshot(path='/tmp/aurora-vip-compact-360.png',full_page=True)
+ print('PASS: operator editable after cutoff, tomorrow default, 10-character limit, operator carried to new date, compact four-field layout at desktop/mobile widths')
+ late.close()
  b.close()

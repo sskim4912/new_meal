@@ -1,9 +1,10 @@
 import { CONFIG } from './config.js';
-import { $, escapeHTML as esc, kstToday, status, confirmAction } from './utils.js';
+import { $, escapeHTML as esc, kstToday, addDays, status, confirmAction } from './utils.js';
 import { requireAdmin } from './admin-entry.js';
 import { adminRequest, logoutAdmin } from './admin-session.js';
 import { validateProxy, proxyDeadline, PROXY_SOURCE } from './vip-rules.js';
 let rows = [], dirty = false, busy = false, activeDate = kstToday(), version = 0;
+if (Date.now() >= proxyDeadline(activeDate)) activeDate = addDays(activeDate, 1);
 const selected = new Set(), edits = new Map();
 $('vipDate').value = activeDate;
 $('vipDate').min = kstToday();
@@ -14,7 +15,7 @@ function render() {
   for (const id of selected) if (!ids.has(id)) selected.delete(id);
   $('vipRows').innerHTML = `<table><thead><tr>${['선택','순번','소속','이름','중식메뉴','수량','대리입력자 이름','작업'].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody>${rows.map((row,index)=>{
     const editing = row.fresh || edits.has(row.id);
-    return `<tr data-row="${index}"><td><input type="checkbox" data-select="${index}" aria-label="${index+1}번 선택" ${selected.has(row.id)?'checked':''}></td><td>${index+1}</td><td><input data-field="company" aria-label="${index+1}번 소속" maxlength="80" value="${esc(row.company)}" ${editing?'':'disabled'}></td><td><input data-field="name" aria-label="${index+1}번 이름" maxlength="40" value="${esc(row.name)}" ${editing?'':'disabled'}></td><td><select data-field="menu" aria-label="${index+1}번 중식메뉴" ${editing?'':'disabled'}>${CONFIG.menuRules.lunch.only.map(menu=>`<option ${menu===row.menu?'selected':''}>${esc(menu)}</option>`).join('')}</select></td><td>1</td><td><input data-field="operatorName" aria-label="${index+1}번 대리입력자 이름" maxlength="40" value="${esc(row.operatorName||'')}" placeholder="${editing?'이름 입력':'미기록'}" ${editing?'':'disabled'}></td><td>${row.fresh?'':editing?`<button data-save="${index}">저장</button><button data-cancel="${index}">취소</button>`:`<button data-edit="${index}">수정</button>`}<button data-remove="${index}" class="danger">삭제</button></td></tr>`;
+    return `<tr data-row="${index}"><td><input type="checkbox" data-select="${index}" aria-label="${index+1}번 선택" ${selected.has(row.id)?'checked':''}></td><td>${index+1}</td><td><input data-field="company" aria-label="${index+1}번 소속" maxlength="80" value="${esc(row.company)}" ${editing?'':'disabled'}></td><td><input data-field="name" aria-label="${index+1}번 이름" maxlength="40" value="${esc(row.name)}" ${editing?'':'disabled'}></td><td><select data-field="menu" aria-label="${index+1}번 중식메뉴" ${editing?'':'disabled'}>${CONFIG.menuRules.lunch.only.map(menu=>`<option ${menu===row.menu?'selected':''}>${esc(menu)}</option>`).join('')}</select></td><td>1</td><td><input data-field="operatorName" aria-label="${index+1}번 대리입력자 이름" maxlength="10" value="${esc(row.operatorName||'')}" placeholder="${editing?'이름 입력':'미기록'}" ${editing?'':'disabled'}></td><td>${row.fresh?'':editing?`<button data-save="${index}">저장</button><button data-cancel="${index}">취소</button>`:`<button data-edit="${index}">수정</button>`}<button data-remove="${index}" class="danger">삭제</button></td></tr>`;
   }).join('')}</tbody></table>`;
   updateDisabled();
 }
@@ -25,7 +26,7 @@ function updateDisabled() {
     tr.querySelectorAll('input,select,button').forEach(control=>control.disabled=unavailable||Boolean(control.dataset.field&&!row.fresh&&!edits.has(row.id)));
   });
   $('vipAdd').disabled=unavailable;$('vipSubmit').disabled=unavailable||!rows.length;
-  $('vipDate').disabled=busy;$('vipReload').disabled=busy;$('vipLogout').disabled=busy;$('vipOperator').disabled=unavailable;
+  $('vipDate').disabled=busy;$('vipReload').disabled=busy;$('vipLogout').disabled=busy;$('vipOperator').disabled=busy;
   $('vipSelectAll').disabled=unavailable||!rows.length;
   $('vipSelectAll').checked=rows.length>0&&selected.size===rows.length;
   $('vipSelectAll').indeterminate=selected.size>0&&selected.size<rows.length;
@@ -60,7 +61,7 @@ $('vipDate').onchange=async()=>{
 $('vipReload').onclick=async()=>{if(!dirty||await confirmAction('다시 조회','저장하지 않은 입력을 지우고 다시 조회할까요?'))await load();};
 $('vipAdd').onclick=()=>{if(busy||closed())return;rows.push(blank());dirty=true;render();};
 $('vipOperator').oninput=()=>{
-  if(busy||closed())return;
+  if(busy)return;
   rows.filter(row=>row.fresh).forEach(row=>{
     if(!row.operatorName||row.operatorName===row.defaultOperator){row.operatorName=$('vipOperator').value.trim();row.defaultOperator=row.operatorName;}
   });
