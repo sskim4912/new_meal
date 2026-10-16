@@ -23,6 +23,33 @@ service cloud.firestore {
       let minutes = d.meal == 'breakfast' ? -1140 : d.meal == 'lunch' ? 0 : 300;
       return request.time < date + duration.value(minutes, 'm');
     }
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/aurora_v2_admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/aurora_v2_admins/$(request.auth.uid)).data.enabled == true;
+    }
+    function isProxy(d) {
+      return d.keys().hasAll(['source']) && d.source == 'admin-proxy';
+    }
+    function beforeProxyDeadline(d) {
+      let parts = d.date.split('-');
+      let date = timestamp.date(int(parts[0]), int(parts[1]), int(parts[2]));
+      return request.time < date + duration.value(60, 'm');
+    }
+    function validProxy(d) {
+      return isAdmin() && isProxy(d)
+        && d.keys().hasAll(['id','requesterKey','group','empId','company','name','phone','date','meal','menu','location','updatedAt','source','quantity'])
+        && d.keys().hasOnly(['id','requesterKey','group','empId','company','name','phone','date','meal','menu','location','updatedAt','source','quantity'])
+        && d.id is string && d.id.matches('^proxy:[A-Fa-f0-9-]{36}$')
+        && d.requesterKey is string && d.requesterKey.size() <= 500
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 40
+        && d.company is string && d.company.size() >= 1 && d.company.size() <= 80
+        && d.empId == '' && d.phone == '' && d.group == 'vip'
+        && d.meal == 'lunch' && d.location == '사무실' && d.quantity == 1
+        && d.menu in ["백반"]
+        && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.updatedAt == request.time && beforeProxyDeadline(d);
+    }
     function validOrder(d) {
       return d.keys().hasAll(['id','requesterKey','group','empId','company','name','phone','date','meal','menu','location','updatedAt'])
         && d.keys().hasOnly(['id','requesterKey','group','empId','company','name','phone','date','meal','menu','location','updatedAt'])
@@ -35,9 +62,14 @@ service cloud.firestore {
         && validProfile(d) && validMeal(d) && beforeDeadline(d);
     }
     // 의도적으로 공개된 테스트 컬렉션입니다. 화면 비밀번호는 DB 접근을 막지 않습니다.
+    match /aurora_v2_admins/{uid} { allow read, write: if false; }
     match /aurora_v2_orders/{orderId} {
-      allow read, delete: if true;
-      allow create, update: if validOrder(request.resource.data);
+      allow read: if true;
+      allow create: if validOrder(request.resource.data) || validProxy(request.resource.data);
+      allow update: if isProxy(resource.data)
+        ? (beforeProxyDeadline(resource.data) && validProxy(request.resource.data))
+        : validOrder(request.resource.data);
+      allow delete: if !isProxy(resource.data) || (isAdmin() && beforeProxyDeadline(resource.data));
     }
   }
 }

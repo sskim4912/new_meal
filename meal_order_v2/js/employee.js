@@ -1,3 +1,4 @@
+import { requireAdmin } from "./admin-entry.js";
 import { CONFIG } from "./config.js";
 import {
   $,
@@ -18,7 +19,7 @@ import {
   orderId,
   validateChange,
 } from "./meal-rules.js";
-import * as storage from "./storage.js";
+import * as storage from "./storage.js?v=20261016-admin-v2";
 let group = "gs",
   week = monday(kstToday()),
   profiles = {},
@@ -155,7 +156,12 @@ $("remember").addEventListener("change", async () => {
   }
 });
 document.querySelectorAll("[data-group]").forEach((button) =>
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
+    if (button.dataset.group === "vip") {
+      try { if (await requireAdmin()) location.assign("vip.html"); }
+      catch (error) { status("employeeStatus", error.message, true); }
+      return;
+    }
     group = button.dataset.group;
     renderIdentity();
     renderDays();

@@ -29,7 +29,6 @@ export const CONFIG = {
     lunch: { offsetDays: 0, time: "09:00" },
     dinner: { offsetDays: 0, time: "14:00" },
   },
-  adminPassword: "230880",
 };
 export const price = (menu) =>
   menu === CONFIG.noOrder ? 0 : (CONFIG.prices[menu] ?? CONFIG.prices.default);

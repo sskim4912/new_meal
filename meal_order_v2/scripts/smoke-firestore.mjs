@@ -13,7 +13,7 @@ import { FIREBASE } from "../js/firebase-config.js";
 import { CONFIG } from "../js/config.js";
 import { kstToday, monday, addDays } from "../js/utils.js";
 import { normalizeProfile, requesterKey, orderId } from "../js/meal-rules.js";
-import { documentId, closeFirestore } from "../js/firestore-storage.js";
+import { documentId, closeFirestore, deleteOrder as deleteSynthetic } from "../js/firestore-storage.js";
 import * as storage from "../js/storage.js";
 const profile = normalizeProfile("gs", {
   empId: `TEST-${randomUUID().slice(0, 20)}`,
@@ -43,7 +43,7 @@ try {
   assert.equal((await storage.getOrdersByRequester(key)).length, 1);
   await storage.upsertOrders([{ ...row, menu: CONFIG.noOrder, location: "" }]);
   assert.equal((await getDocFromServer(ref)).data()?.menu, CONFIG.noOrder);
-  await storage.deleteOrder(id);
+  await deleteSynthetic(id);
   assert.equal((await getDocFromServer(ref)).exists(), false);
   console.log(
     "PASS: actual Firestore save, read from a second client, update, cancellation and deletion.",

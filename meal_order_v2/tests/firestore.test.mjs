@@ -18,6 +18,7 @@ import { normalizeProfile, requesterKey, orderId } from "../js/meal-rules.js";
 import * as storage from "../js/storage.js";
 import { closeFirestore } from "../js/firestore-storage.js";
 import { addDays } from "../js/utils.js";
+import { getAuth, connectAuthEmulator, createUserWithEmailAndPassword } from 'firebase/auth';
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
   test(
     "Firestore integration requires emulator (run test:firestore)",
@@ -140,5 +141,43 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
       getDocs(collection(db, "unrelated")),
       (e) => e.code === "permission-denied",
     );
+  });
+  test('Firestore proxy rules require registered administrator, fixed lunch/location/quantity and protect existing proxy records', async () => {
+    assert(process.env.FIREBASE_AUTH_EMULATOR_HOST, 'Run both Firestore and Auth emulators.');
+    const adminApp = initializeApp({ ...FIREBASE.config }, 'proxy-admin');
+    const auth = getAuth(adminApp);
+    connectAuthEmulator(auth, `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`, { disableWarnings: true });
+    const credential = await createUserWithEmailAndPassword(auth, `proxy-${Date.now()}@example.test`, 'test-password-only');
+    const adminDb = getFirestore(adminApp);
+    connectFirestoreEmulator(adminDb, host, Number(port));
+    const proxyId = 'proxy:11111111-1111-4111-8111-111111111111';
+    const adminRef = doc(adminDb, FIREBASE.collection, 'proxy-rule-test');
+    const publicRef = doc(db, FIREBASE.collection, 'proxy-rule-test');
+    const proxy = { ...row('lunch', '백반', '사무실'), id: proxyId, group: 'vip', empId: '', company: '본사', phone: '', quantity: 1, source: 'admin-proxy', updatedAt: serverTimestamp() };
+    try {
+      await assert.rejects(setDoc(publicRef, proxy), e => e.code === 'permission-denied');
+      await assert.rejects(setDoc(adminRef, proxy), e => e.code === 'permission-denied');
+      const provision = await fetch(`http://${host}:${port}/v1/projects/demo-aurora/databases/(default)/documents/aurora_v2_admins/${credential.user.uid}`, { method: 'PATCH', headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { enabled: { booleanValue: true } } }) });
+      assert.equal(provision.status, 200);
+      await setDoc(adminRef, proxy);
+      await assert.rejects(setDoc(publicRef, { ...proxy, name: '변조' }), e => e.code === 'permission-denied');
+      await assert.rejects(deleteDoc(publicRef), e => e.code === 'permission-denied');
+      await assert.rejects(setDoc(adminRef, { ...proxy, quantity: 2 }), e => e.code === 'permission-denied');
+      await assert.rejects(setDoc(adminRef, { ...proxy, location: 'OSBL' }), e => e.code === 'permission-denied');
+      await assert.rejects(setDoc(adminRef, { ...proxy, date: '2020-01-01' }), e => e.code === 'permission-denied');
+      await assert.rejects(setDoc(doc(adminDb, 'aurora_v2_admins', 'self-escalation'), { enabled: true }), e => e.code === 'permission-denied');
+      await deleteDoc(adminRef);
+      const expiredFields = Object.fromEntries(Object.entries({ ...proxy, date: '2020-01-01' }).filter(([key]) => key !== 'updatedAt').map(([key,value]) => [key,typeof value === 'number' ? { integerValue: String(value) } : { stringValue: value }]));
+      expiredFields.updatedAt = { timestampValue: '2020-01-01T00:00:00Z' };
+      const localPath = `http://${host}:${port}/v1/projects/demo-aurora/databases/(default)/documents/${FIREBASE.collection}/proxy-rule-test`;
+      const seeded = await fetch(localPath, { method: 'PATCH', headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: expiredFields }) });
+      assert.equal(seeded.status, 200);
+      await assert.rejects(deleteDoc(adminRef), e => e.code === 'permission-denied');
+      await assert.rejects(setDoc(adminRef, proxy), e => e.code === 'permission-denied');
+      assert.equal((await fetch(localPath, { method: 'DELETE', headers: { Authorization: 'Bearer owner' } })).status, 200);
+    } finally {
+      await terminate(adminDb);
+      await deleteApp(adminApp);
+    }
   });
 }

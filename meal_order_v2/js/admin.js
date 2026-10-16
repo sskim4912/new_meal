@@ -1,4 +1,5 @@
-import { initSms } from "./sms-ui.js?v=20261013-confirm2";
+import { loginAdmin, verifyAdmin, logoutAdmin, sessionToken } from "./admin-session.js";
+import { initSms } from "./sms-ui.js?v=20261016-admin-v2";
 import { CONFIG, price } from "./config.js";
 import {
   $,
@@ -12,8 +13,7 @@ import {
   downloadCSV,
 } from "./utils.js";
 import { aggregate, actualOrders, filterOrders } from "./aggregate.js";
-import * as storage from "./storage.js";
-let smsToken = "";
+import * as storage from "./storage.js?v=20261016-admin-v2";
 let unlocked = false,
   rows = [],
   detailRows = [],
@@ -65,6 +65,7 @@ function renderDetails() {
     "식사",
     "장소",
     "메뉴",
+    "신청 방식",
     "수량",
     "단가",
     "금액",
@@ -76,7 +77,7 @@ function renderDetails() {
     return;
   }
   $("detailTable").innerHTML =
-    `<table><thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}<th scope="col"><label class="delete-choice"><input id="selectAllDetails" type="checkbox" aria-label="현재 상세 내역 전체 선택" />삭제</label></th></tr></thead><tbody>${detailRows.map((row, i) => `<tr>${[row.date, groupLabel(row.group), row.company || "—", row.empId || "—", row.name, mealLabel(row.meal), row.location || "—", row.menu, row.menu === CONFIG.noOrder ? 0 : 1, money(price(row.menu)), money(price(row.menu))].map((value) => `<td>${esc(value)}</td>`).join("")}<td><div class="delete-choice"><input type="checkbox" data-select="${i}" aria-label="${esc(`${row.date} ${row.name} ${mealLabel(row.meal)} 선택`)}" ${selectedIds.has(row.id) ? "checked" : ""} /><button class="danger" data-delete="${i}">삭제</button></div></td></tr>`).join("")}</tbody></table>`;
+    `<table><thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}<th scope="col"><label class="delete-choice"><input id="selectAllDetails" type="checkbox" aria-label="현재 상세 내역 전체 선택" />삭제</label></th></tr></thead><tbody>${detailRows.map((row, i) => `<tr>${[row.date, groupLabel(row.group), row.company || "—", row.empId || "—", row.name, mealLabel(row.meal), row.location || "—", row.menu, row.source === "admin-proxy" ? "관리자 대리신청" : row.group === "vip" ? "기존 VIP 신청" : "직접 신청", row.menu === CONFIG.noOrder ? 0 : 1, money(price(row.menu)), money(price(row.menu))].map((value) => `<td>${esc(value)}</td>`).join("")}<td><div class="delete-choice"><input type="checkbox" data-select="${i}" aria-label="${esc(`${row.date} ${row.name} ${mealLabel(row.meal)} 선택`)}" ${selectedIds.has(row.id) ? "checked" : ""} /><button class="danger" data-delete="${i}">삭제</button></div></td></tr>`).join("")}</tbody></table>`;
   updateSelection();
 }
 function updateSelection() {
@@ -182,34 +183,34 @@ $("queryGroup").insertAdjacentHTML(
 );
 function openLogin() {
   $("password").value = "";
-  $("loginSmsToken").value = "";
   status("passwordError", "");
   $("passwordDialog").showModal();
 }
 $("loginButton").addEventListener("click", openLogin);
 $("closePassword").addEventListener("click", () => $("passwordDialog").close());
-$("passwordDialog").addEventListener("close", () => { $("password").value = ""; $("loginSmsToken").value = ""; });
-$("passwordForm").addEventListener("submit", (event) => {
-  event.preventDefault();
-  if ($("password").value !== CONFIG.adminPassword) {
-    status("passwordError", "비밀번호를 확인해주세요.", true);
-    return;
-  }
-  smsToken = $("loginSmsToken").value.trim();
-  $("loginSmsToken").value = "";
+$("passwordDialog").addEventListener("close", () => { $("password").value = ""; });
+function unlockAdmin() {
   unlocked = true;
   $("password").value = "";
-  $("passwordDialog").close();
+  if ($("passwordDialog").open) $("passwordDialog").close();
   $("adminContent").hidden = false;
   $("loginButton").hidden = true;
   refresh();
+}
+$("passwordForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = $("passwordForm").querySelector("button.primary");
+  if (button.disabled) return;
+  button.disabled = true;
+  try { await loginAdmin($("password").value); unlockAdmin(); }
+  catch (error) { status("passwordError", error.message, true); }
+  finally { button.disabled = false; }
 });
-$("logoutButton").addEventListener("click", () => {
+function lockAdmin() {
   unlocked = false;
   $("smsButton").disabled = true;
   $("smsDialog").close();
   $("scheduleSmsDialog").close();
-  smsToken = "";
   queryVersion++;
   rows = [];
   detailRows = [];
@@ -225,7 +226,9 @@ $("logoutButton").addEventListener("click", () => {
     "dailyTable",
     "totalCards",
   ].forEach((id) => $(id).replaceChildren());
-});
+}
+$("logoutButton").addEventListener("click", async () => { try { await logoutAdmin(); } finally { lockAdmin(); } });
+window.addEventListener("admin-session-expired", lockAdmin);
 $("viewMode").addEventListener("change", () => {
   $("dayField").hidden = $("viewMode").value !== "day";
   $("monthField").hidden = $("viewMode").value !== "month";
@@ -327,6 +330,7 @@ $("csvButton").addEventListener("click", () => {
       "식사",
       "장소",
       "메뉴",
+      "신청 방식",
       "단가",
       "금액",
     ],
@@ -339,6 +343,7 @@ $("csvButton").addEventListener("click", () => {
       mealLabel(row.meal),
       row.location,
       row.menu,
+      row.source === "admin-proxy" ? "관리자 대리신청" : row.group === "vip" ? "기존 VIP 신청" : "직접 신청",
       formatNumber(price(row.menu)),
       formatNumber(price(row.menu)),
     ]),
@@ -347,5 +352,5 @@ $("csvButton").addEventListener("click", () => {
 $("scheduleSmsButton").addEventListener("click", () => {
   if (unlocked) $("scheduleSmsDialog").showModal();
 });
-initSms(() => ({ unlocked, rows, query, smsToken }));
-openLogin();
+initSms(() => ({ unlocked, rows, query, token: sessionToken() }));
+verifyAdmin().then(valid => valid ? unlockAdmin() : openLogin());

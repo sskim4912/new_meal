@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Aurora Project · 관리자 집계</title>
     <link rel="stylesheet" href="css/style.css" />
-    <script type="module" src="js/admin.js?v=20261013-sms2"></script>
+    <script type="module" src="js/admin.js?v=20261016-admin-v2"></script>
     <script defer src="js/home.js?v=20261013-home2"></script>
   </head>
   <body>
@@ -17,7 +17,7 @@
             <strong>Aurora Project</strong><span>식사 신청 관리자</span>
           </div>
         </a>
-        <a class="button" href="index.html?start=new">직원 화면</a>
+        <div class="actions"><a class="button" href="vip.html">VIP·본사출장 대리신청</a><a class="button" href="index.html?start=new">직원 화면</a></div>
       </div>
     </header>
     <main>
@@ -99,7 +99,7 @@
       </div>
     </main>
     <footer>
-      Aurora Project · 관리자 <span>정적 비밀번호는 실제 인증이 아닙니다.</span>
+      Aurora Project · 관리자 <span>관리자 서버 인증</span>
     </footer>
     <dialog id="passwordDialog">
       <h2>관리자 접근</h2>
@@ -111,8 +111,7 @@
             autocomplete="off"
             required
         /></label>
-        <label>문자 발송 인증키 (선택)<input id="loginSmsToken" type="password" autocomplete="off" placeholder="문자를 보낼 경우 로그인 때 한 번 입력" /></label>
-        <p class="subtle">인증키는 이 로그인 동안만 사용하며, 발송할 때 다시 입력하지 않습니다.</p>
+        <p class="subtle">관리자 비밀번호 하나로 대리신청과 문자 발송을 이용합니다. 로그인은 최대 8시간 유지됩니다.</p>
         <p id="passwordError" class="status error" aria-live="polite"></p>
         <div class="actions">
           <button type="button" id="closePassword">취소</button
@@ -129,6 +128,7 @@
     <dialog id="smsDialog">
       <h2>집계 문자 발송</h2>
       <p class="subtle">현재 조회된 집계를 발송합니다. 신청자 이름과 사번은 포함하지 않습니다.</p>
+      <label>집계 종류<select id="smsKind"><option value="general">현재 조회 집계</option><option value="first">중식 1차 집계</option><option value="final">중식 최종 집계</option></select></label>
       <label>수신 휴대폰 번호<input id="smsPhone" type="tel" inputmode="tel" autocomplete="off" placeholder="01012345678" /></label>
       <label>발송 내용<textarea id="smsPreview" rows="12" readonly></textarea></label>
       <p id="smsStatus" class="status" aria-live="polite"></p>

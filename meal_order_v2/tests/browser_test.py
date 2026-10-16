@@ -6,6 +6,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
+from browser_support import mock_admin_auth
 
 BASE = os.environ.get('AURORA_TEST_URL', 'http://127.0.0.1:8000')
 DATE = '2026-10-05'
@@ -23,6 +24,9 @@ def save(page, cancel=False):
 
 def login(page):
     page.goto(BASE + '/admin.html')
+    if not page.locator('#passwordDialog').is_visible():
+        expect(page.locator('#adminContent')).to_be_visible()
+        return
     page.locator('#password').fill('wrong')
     page.locator('#passwordForm button[type="button"] + button').click()
     expect(page.locator('#passwordError')).to_contain_text('확인')
@@ -33,6 +37,7 @@ def login(page):
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH', '/usr/bin/chromium'), headless=True, args=['--no-sandbox'])
     context = browser.new_context(viewport={'width':1120,'height':900}, accept_downloads=True)
+    mock_admin_auth(context)
     context.route('**/js/firebase-config.js', lambda route: route.fulfill(content_type='text/javascript',body="export const FIREBASE = { enabled: false };"))
     page = context.new_page()
     errors=[]
@@ -71,7 +76,7 @@ with sync_playwright() as p:
     page.locator('#nextWeek').click()
     page.locator('#prevWeek').click()
     expect(menu(page,'dinner')).to_have_value('샐러드(닭가슴살)')
-    for group, name, location in [('partner','협력사 신청자','ISBL'),('vip','<img src=x onerror=alert(1)>','사무실')]:
+    for group, name, location in [('partner','협력사 신청자','ISBL')]:
         page.locator('#tab-'+group).click()
         page.locator('[data-field="company"]').fill('회사 '+group)
         page.locator('[data-field="name"]').fill(name)
@@ -84,6 +89,7 @@ with sync_playwright() as p:
         save(page)
         page.locator('#loadButton').click()
         expect(menu(page,'lunch')).to_have_value('백반')
+    page.evaluate("const orders=JSON.parse(localStorage.getItem('aurora.v2.orders'));orders.push({id:'legacy-vip',requesterKey:'legacy',date:'2026-10-05',group:'vip',empId:'',name:'<img src=x onerror=alert(1)>',company:'회사 vip',phone:'01012345678',meal:'lunch',menu:'백반',location:'사무실'});localStorage.setItem('aurora.v2.orders',JSON.stringify(orders));")
     assert page.locator('#successDialog img').count()==0
     # 3개 실제 신청 + 1개 신청 안 함. 기본정보와 신청은 별도 저장.
     assert len(page.evaluate("JSON.parse(localStorage.getItem('aurora.v2.orders'))"))==4
@@ -111,7 +117,7 @@ with sync_playwright() as p:
         assert len(text.splitlines())==4
         cells=list(csv.reader(io.StringIO(text)))
         assert cells[0][-2:]==['단가','금액']
-        assert all(len(row)==10 for row in cells)
+        assert all(len(row)==11 for row in cells)
         assert all(row[-1] in ['8,000','9,000'] and row[-2]==row[-1] for row in cells[1:])
     page.locator('#detailTable [data-delete]').first.click()
     page.locator('#confirmDialog button[value="no"]').click()
@@ -122,6 +128,7 @@ with sync_playwright() as p:
     page.locator('#detailSearch').fill('')
     # 별도 컨텍스트에서 선택 삭제를 검증하여 기존 회귀 검사의 주문을 유지합니다.
     bulk_context=browser.new_context(viewport={'width':390,'height':850})
+    mock_admin_auth(bulk_context)
     bulk_context.route('**/js/firebase-config.js',lambda route:route.fulfill(content_type='text/javascript',body="export const FIREBASE = { enabled: false };"))
     bulk=bulk_context.new_page()
     bulk.clock.install(time=datetime(2026,10,4,23,0,tzinfo=timezone.utc))
@@ -263,4 +270,4 @@ with sync_playwright() as p:
     assert card('2027-05-04').locator('.holiday-name').count()==0
     calendar_context.close()
     browser.close()
-    print('PASS: 신청자 3종, 메뉴/장소, 저장·수정·취소·불러오기, 확인 취소, 마감 재검증, 관리자 필터/집계/검색/삭제/초기화/CSV, 모바일 360/390/430px; 브라우저 오류 0')
+    print('PASS: 일반 신청자 2종 및 기존 VIP 보존, 메뉴/장소, 저장·수정·취소·불러오기, 확인 취소, 마감 재검증, 관리자 필터/집계/검색/삭제/초기화/CSV, 모바일 360/390/430px; 브라우저 오류 0')
