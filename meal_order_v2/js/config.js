@@ -3,7 +3,7 @@ import { HOLIDAYS_2026, HOLIDAYS_2027 } from "./holidays.js";
 export const CONFIG = {
   projectName: "Aurora Project",
   holidays: { ...HOLIDAYS_2026, ...HOLIDAYS_2027 },
-  groups: { gs: "GS직원", partner: "협력사", vip: "VIP" },
+  groups: { gs: "GS직원", partner: "협력사 · 발주처", vip: "VIP · 본사출장" },
   meals: { breakfast: "조식", lunch: "중식", dinner: "석식" },
   noOrder: "신청 안 함",
   locations: ["사무실", "OSBL", "ISBL"],
