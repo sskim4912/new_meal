@@ -1,0 +1,105 @@
+/* VIP 대리신청: 신규 입력과 저장 내역에만 적용하는 화면 스타일 */
+.vip-page { font-size: 14px; line-height: 1.6; }
+.vip-page .header, .vip-page main { max-width: 1240px; }
+.vip-page main { padding-top: 32px; padding-bottom: 48px; }
+.vip-page .page-heading { margin-bottom: 24px; }
+.vip-page .page-heading h1 { font-size: 26px; line-height: 1.35; letter-spacing: -.035em; margin: 0 0 8px; }
+.vip-page .page-heading p { color: var(--muted); font-size: 14px; margin: 0; }
+.vip-header-actions { display: flex; align-items: center; gap: 8px; }
+.vip-page button, .vip-page .button { min-height: 40px; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 7px; white-space: nowrap; line-height: 1.4; }
+.vip-page input, .vip-page select { min-height: 40px; height: 40px; font-size: 14px; line-height: 1.4; padding: 8px 10px; margin: 0; border-radius: 7px; min-width: 0; }
+.vip-page label { font-size: 13px; font-weight: 600; line-height: 1.5; }
+.vip-page input:disabled, .vip-page select:disabled { background: #f3f5f3; color: #7a877f; cursor: not-allowed; opacity: 1; }
+.vip-section { padding: 24px; margin-bottom: 24px; border-radius: 14px; box-shadow: 0 3px 12px #18372a03; }
+.vip-section-heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+.vip-section h2 { font-size: 19px; line-height: 1.4; letter-spacing: -.025em; margin: 0 0 5px; }
+.vip-section-heading p { font-size: 13px; color: var(--muted); margin: 0; }
+.vip-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.vip-badges span { background: #eef5f0; border: 1px solid #dceade; color: #365d48; font-size: 12px; padding: 4px 9px; border-radius: 20px; white-space: nowrap; }
+.vip-form-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 180px)); gap: 16px; margin-bottom: 22px; }
+.vip-form-fields label, .vip-query-bar label { display: grid; gap: 6px; }
+.vip-query-bar { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; }
+.vip-query-bar label { width: 180px; min-width: 0; }
+.vip-query-bar button { min-width: 68px; }
+.vip-table-wrap { overflow-x: auto; }
+.vip-table { width: 100%; font-size: 14px; white-space: normal; table-layout: fixed; }
+.vip-table th { font-size: 12px; font-weight: 600; color: #4c6c59; background: #eef4ef; }
+.vip-table th, .vip-table td { padding: 12px 10px; vertical-align: middle; text-align: left; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.vip-table th:first-child { border-radius: 7px 0 0 7px; }
+.vip-table th:last-child { border-radius: 0 7px 7px 0; }
+.vip-table td strong { font-weight: 600; }
+.vip-table input, .vip-table select { width: 100%; }
+.vip-table input:not([type=checkbox]) { max-width: 180px; }
+.vip-table select { max-width: 140px; }
+.vip-table .vip-number, .vip-table .vip-select-cell { text-align: center; }
+.vip-table .vip-work { text-align: right; }
+.vip-table th:first-child { width: 58px; text-align: center; }
+.vip-draft-table th:nth-child(4) { width: 160px; }
+.vip-draft-table th:nth-child(5) { width: 62px; }
+.vip-draft-table th:last-child { width: 100px; text-align: right; }
+.vip-saved-table th:nth-child(4) { width: 100px; }
+.vip-saved-table th:nth-child(5) { width: 56px; }
+.vip-saved-table th:nth-child(7) { width: 56px; text-align: center; }
+.vip-saved-table th:last-child { width: 166px; text-align: right; }
+.vip-row-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.vip-row-actions button, .vip-table .vip-quiet { min-height: 36px; font-size: 13px; padding: 7px 10px; }
+.vip-quiet { color: var(--muted); }
+.vip-quantity { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; font-variant-numeric: tabular-nums; }
+.vip-submit-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 18px; }
+.vip-submit-bar .primary { min-width: 120px; }
+.vip-list-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 0 12px; }
+#vipSummary { margin: 0; font-size: 13px; color: var(--muted); }
+.vip-selection-tools { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-left: auto; white-space: nowrap; }
+.vip-selection-tools .delete-choice { font-size: 13px; font-weight: 500; gap: 7px; min-height: 40px; cursor: pointer; }
+#vipSelectedCount { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.vip-page .vip-selection-tools input[type=checkbox], .vip-page .vip-row-choice input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; padding: 0; margin: 0; flex: 0 0 18px; accent-color: var(--green); cursor: pointer; }
+.vip-row-choice { display: flex; align-items: center; justify-content: center; min-height: 40px; cursor: pointer; }
+.vip-empty { margin: 0; padding: 36px 16px; text-align: center; color: var(--muted); background: #f8faf8; border: 1px dashed var(--line); border-radius: 8px; font-size: 14px; }
+.vip-page .status { margin: 14px 0 0; font-size: 13px; line-height: 1.6; }
+.vip-page .status:empty { display: none; }
+.vip-deadline { font-size: 13px; color: #8a5a23; background: #fff8eb; border-radius: 7px; padding: 10px 12px; margin: 0 0 14px; }
+.vip-table .is-editing { background: #f5faf6; }
+.vip-page .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (max-width: 900px) {
+  .vip-page .header, .vip-page main { padding-left: 20px; padding-right: 20px; }
+  .vip-section { padding: 20px; }
+  .vip-table, .vip-table tbody { display: block; }
+  .vip-table thead { display: none; }
+  .vip-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: white; margin-bottom: 12px; }
+  .vip-table tr:last-child { margin-bottom: 0; }
+  .vip-table td { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; border: 0; padding: 0; min-width: 0; text-align: left; }
+  .vip-table td::before { content: attr(data-label); font-size: 12px; font-weight: 500; color: var(--muted); }
+  .vip-table .vip-number { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 8px; color: var(--green); font-weight: 600; border-bottom: 1px solid #edf1ed; padding-bottom: 10px; }
+  .vip-table .vip-number::before { content: '신청자'; }
+  .vip-draft-table .vip-work { grid-column: 1 / -1; align-items: flex-end; }
+  .vip-table .vip-work::before { display: none; }
+  .vip-saved-table .vip-select-cell { justify-content: center; align-items: flex-end; grid-column: 1; }
+  .vip-saved-table .vip-select-cell::before { display: none; }
+  .vip-saved-table .vip-row-choice { flex-direction: row; gap: 7px; font-weight: 500; }
+  .vip-row-choice::after { content: '선택'; font-size: 13px; }
+  .vip-saved-table .vip-work { grid-column: 2; justify-content: center; align-items: flex-end; }
+  .vip-row-actions { flex-wrap: wrap; }
+}
+@media (max-width: 520px) {
+  .vip-page .header, .vip-page main { padding-left: 16px; padding-right: 16px; }
+  .vip-page main { padding-top: 24px; }
+  .vip-page .header { gap: 10px; flex-wrap: wrap; padding-top: 14px; padding-bottom: 14px; }
+  .vip-page .brand { gap: 8px; }
+  .vip-page .brand strong { font-size: 16px; }
+  .vip-header-actions { margin-left: auto; }
+  .vip-header-actions button, .vip-header-actions .button { font-size: 12px; min-height: 36px; padding: 7px 9px; }
+  .vip-page .page-heading h1 { font-size: 23px; }
+  .vip-page .page-heading p { font-size: 13px; }
+  .vip-section { padding: 18px 16px; margin-bottom: 18px; }
+  .vip-section h2 { font-size: 18px; }
+  .vip-section-heading { gap: 12px; margin-bottom: 18px; }
+  .vip-form-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .vip-page input, .vip-page select { font-size: 16px; min-height: 44px; height: 44px; padding: 9px 8px; }
+  .vip-page button, .vip-page .button { min-height: 44px; }
+  .vip-table tr { padding: 14px 12px; gap: 12px; }
+  .vip-list-toolbar { gap: 10px; }
+  .vip-selection-tools { width: 100%; gap: 10px; }
+  .vip-selection-tools button { padding-left: 10px; padding-right: 10px; font-size: 13px; }
+  .vip-query-bar label { width: 170px; }
+  .vip-table .vip-row-actions button { min-height: 40px; }
+}
