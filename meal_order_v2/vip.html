@@ -5,10 +5,14 @@
   <title>VIP·본사출장자 식사 대리신청</title>
   <link rel="stylesheet" href="css/style.css?v=vip-layout-v6">
   <link rel="stylesheet" href="css/vip.css?v=vip-layout-v6">
-  <script type="module" src="js/vip.js?v=vip-layout-v6"></script><script defer src="js/home.js"></script>
+  <script type="module" src="js/vip.js?v=shared-nav-v7"></script><script type="module" src="js/home.js?v=shared-nav-v7"></script>
+  <link rel="stylesheet" href="css/navigation.css?v=shared-nav-v7">
 </head>
 <body class="vip-page">
-<header><div class="header"><a class="brand" href="index.html?start=new" data-home aria-label="GS건설 로고 · 홈으로"><img src="assets/gs-logo.jpeg" alt="GS건설 로고"><strong>Aurora Project</strong></a><div class="vip-header-actions"><a class="button" href="admin.html">관리자 집계</a><button id="vipLogout" hidden>로그아웃</button></div></div></header>
+<header><div class="header site-header">
+  <a class="brand" href="index.html?start=new" data-home aria-label="GS건설 로고 · 로그아웃 후 홈으로"><img src="assets/gs-logo.jpeg" alt="GS건설 로고"><strong>Aurora Project</strong></a>
+  <nav class="site-nav" aria-label="주 메뉴"><a href="index.html?start=new">직원 식사신청</a><a href="vip.html">중식 대리신청</a><a href="admin.html">관리자 집계</a><button id="logoutButton" data-logout hidden>로그아웃</button></nav>
+</div></header>
 <main>
   <div class="page-heading"><h1>VIP·본사출장자 식사 대리신청</h1><p>신청은 위에서 작성하고, 저장된 내역은 아래에서 확인하세요.</p></div>
   <button id="vipLogin" class="primary">관리자 로그인</button>

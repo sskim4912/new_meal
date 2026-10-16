@@ -1,7 +1,8 @@
+import { registerNavigationState, isNavigationLeaving } from './navigation-state.js';
 import { CONFIG } from './config.js';
 import { $, escapeHTML as esc, kstToday, addDays, status, confirmAction } from './utils.js';
 import { requireAdmin } from './admin-entry.js';
-import { adminRequest, logoutAdmin } from './admin-session.js';
+import { adminRequest } from './admin-session.js';
 import { validateProxy, proxyDeadline, PROXY_SOURCE } from './vip-rules.js';
 
 let activeDate = kstToday();
@@ -58,7 +59,6 @@ function updateDisabled() {
   $('vipSubmit').disabled = newLocked || !drafts.length;
   $('vipQueryDate').disabled = busy;
   $('vipReload').disabled = busy;
-  $('vipLogout').disabled = busy;
   $('vipSelectAll').disabled = listLocked || !rows.length;
   $('vipSelectAll').checked = rows.length > 0 && selected.size === rows.length;
   $('vipSelectAll').indeterminate = selected.size > 0 && selected.size < rows.length;
@@ -84,7 +84,7 @@ async function load(date) {
 }
 function lock(preserve = false) {
   version++;
-  $('vipContent').hidden = true; $('vipLogout').hidden = true; $('vipLogin').hidden = false;
+  $('vipContent').hidden = true; $('vipLogin').hidden = false;
   if (!preserve) {
     drafts = [blank()]; rows = []; loadedDate = null; selected.clear(); edits.clear();
     $('vipOperator').value = ''; status('vipStatus', ''); status('vipQueryStatus', '');
@@ -93,15 +93,11 @@ function lock(preserve = false) {
 }
 async function enter() {
   if (!(await requireAdmin())) return;
-  $('vipContent').hidden = false; $('vipLogout').hidden = false; $('vipLogin').hidden = true;
+  $('vipContent').hidden = false; $('vipLogin').hidden = true;
   renderDrafts(); renderRows();
   if (!edits.size) await load($('vipQueryDate').value);
 }
 $('vipLogin').onclick = enter;
-$('vipLogout').onclick = async () => {
-  if (dirty() && !(await confirmAction('로그아웃', '저장하지 않은 입력을 지우고 로그아웃할까요?'))) return;
-  try { await logoutAdmin(); } finally { lock(); }
-};
 window.addEventListener('admin-session-expired', () => {
   lock(true); status('vipStatus', '관리자 로그인이 만료되었습니다. 다시 로그인해 주세요.', true);
 });
@@ -212,5 +208,6 @@ $('vipRows').addEventListener('click', async event => {
 $('vipSubmit').onclick = () => save(drafts, activeDate, true);
 $('vipDeleteSelected').onclick = () => remove(rows.filter(row => selected.has(row.id)));
 setInterval(updateDisabled, 1000);
-window.addEventListener('beforeunload', event => { if (dirty()) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { if (!isNavigationLeaving() && dirty()) { event.preventDefault(); event.returnValue = ''; } });
+registerNavigationState({ dirty, busy: () => busy });
 enter();
