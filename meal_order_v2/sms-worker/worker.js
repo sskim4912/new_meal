@@ -1,19 +1,11 @@
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
-export async function validateRequest(request,env) {
-  if (!env.SMS_ADMIN_TOKEN || env.SMS_ADMIN_TOKEN.length < 32 || !env.SOLAPI_API_KEY || !env.SOLAPI_API_SECRET || !/^\d{8,11}$/.test(env.SOLAPI_FROM_NUMBER||'')) return {error:'문자 서버 설정이 완료되지 않았습니다.',status:503};
-  const received=request.headers.get('Authorization')||'';
-  const expected=`Bearer ${env.SMS_ADMIN_TOKEN}`;
-  const digest=async v=>new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
-  const [a,b]=await Promise.all([digest(received),digest(expected)]);
-  let diff=0;for(let i=0;i<a.length;i++)diff|=a[i]^b[i];
-  if(diff) return {error:'문자 발송 인증키를 확인해주세요.',status:401};
-  if(Number(request.headers.get('content-length'))>12000) return {error:'요청이 너무 큽니다.',status:413};
-  let body;try {const raw=await request.text();if(raw.length>12000)return {error:'요청이 너무 큽니다.',status:413};body=JSON.parse(raw);}catch{return {error:'잘못된 요청입니다.',status:400};}
-  if(!/^01[016789]\d{7,8}$/.test(body.to||'') || typeof body.text!=='string' || !body.text.trim() || new TextEncoder().encode(body.text).length>2000 || !/^[a-f0-9-]{36}$/i.test(body.requestId||'')) return {error:'수신번호, 문자 길이 또는 요청 번호를 확인해주세요.',status:400};
-  return {body};
+export function validateSmsPayload(body, env) {
+  if (!env.SOLAPI_API_KEY || !env.SOLAPI_API_SECRET || !/^\d{8,11}$/.test(env.SOLAPI_FROM_NUMBER || '')) return { error: '문자 서버 설정이 완료되지 않았습니다.', status: 503 };
+  if (!body || !/^01[016789]\d{7,8}$/.test(body.to || '') || typeof body.text !== 'string' || !body.text.trim() || new TextEncoder().encode(body.text).length > 2000 || !/^[a-f0-9-]{36}$/i.test(body.requestId || '')) return { error: '수신번호, 문자 길이 또는 요청 번호를 확인해주세요.', status: 400 };
+  return { body };
 }
 export { AdminState } from './admin-state.js';
-import { ApiError, allOrders, proxySave, deleteOrders } from './firebase.js';
+import { ApiError, allOrders, proxySave, deleteOrders, digest } from './firebase.js';
 import { lunchSnapshot, buildLunchReport, kstTime } from '../js/lunch-report.js';
 async function registry(env, path, body) {
   if (!env.ADMIN) throw new ApiError('관리자 서버 업데이트가 필요합니다. Worker 배포 상태를 확인해주세요.', 503);
@@ -44,7 +36,8 @@ export default {
     if(path === '/orders/delete') return wrap(json(await deleteOrders(env,body)));
     if(path === '/reports/preview') {
       if(!['first','final'].includes(body.kind) || !/^\d{4}-\d{2}-\d{2}$/.test(body.date || '')) throw new ApiError('중식 집계 날짜와 종류를 확인해주세요.');
-      const snapshot=lunchSnapshot(await allOrders(env,body.date),body.date);
+      const reportRows=await Promise.all((await allOrders(env,body.date)).map(async row=>({...row,id:await digest(row.id)})));
+      const snapshot=lunchSnapshot(reportRows,body.date);
       const {snapshot:first}=await registry(env,'/snapshot/get',{date:body.date});
       const text=buildLunchReport(snapshot,body.kind,first);
       const {id}=await registry(env,'/preview/set',{preview:{snapshot,kind:body.kind,text}});
@@ -60,7 +53,8 @@ export default {
     } else {
       delete body.snapshot;delete body.kind;delete body.subject;
     }
-    if(typeof body.text !== 'string' || !body.text.trim() || new TextEncoder().encode(body.text).length > 2000) throw new ApiError('문자 내용은 2000바이트 이내로 입력해주세요.');
+    const validation=validateSmsPayload(body,env);
+    if(validation.error)throw new ApiError(validation.error,validation.status);
     // Durable Object에서 요청 시각을 한 번만 생성하여 재시도해도 같은 내용으로 처리합니다.
     return wrap(await env.REQUESTS.get(env.REQUESTS.idFromName(body.requestId)).fetch(new Request('https://internal/send',{method:'POST',body:JSON.stringify(body)})));
   } catch(error) {

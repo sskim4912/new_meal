@@ -70,6 +70,24 @@ test('all protected API routes reject a fake session, and a legacy SMS key canno
     assert.equal((await worker.fetch(request,env)).status,401);
   }
 });
+test('gateway builds authoritative lunch preview and ignores forged client snapshot/text during report sending',async()=>{
+  const {env,actor}=setup();
+  Object.assign(env,{SOLAPI_API_KEY:'fake',SOLAPI_API_SECRET:'fake',SOLAPI_FROM_NUMBER:'0212345678'});
+  const sent=[];
+  env.REQUESTS={idFromName:name=>name,get:()=>({fetch:async request=>{sent.push(await request.json());return Response.json({status:'accepted',messageId:'mock-only'});}})};
+  const session=await(await actor.fetch(req('/login',{password:'230880',ip:'preview'}))).json();
+  const call=(path,body)=>worker.fetch(new Request('https://worker.example'+path,{method:'POST',headers:{Origin:env.ALLOWED_ORIGIN,Authorization:`Bearer ${session.token}`},body:JSON.stringify(body)}),env);
+  const original=globalThis.fetch;
+  globalThis.fetch=async()=>Response.json([{document:{fields:Object.fromEntries(Object.entries(candidate()).map(([key,value])=>[key,typeof value==='number'?{integerValue:String(value)}:{stringValue:value}]))}}]);
+  try{
+    const preview=await(await call('/reports/preview',{date:'2026-10-16',kind:'first'})).json();
+    assert.match(preview.text,/중식 1차 집계/);assert.match(preview.text,/전체: 1개/);assert(!preview.text.includes('동명이인'));
+    const response=await call('/send',{to:'01012345678',requestId:crypto.randomUUID(),reportId:preview.reportId,text:'forged',snapshot:{total:999}});
+    assert.equal(response.status,200);assert.equal(sent[0].text,preview.text);assert.equal(sent[0].snapshot.total,1);
+    assert.match(sent[0].snapshot.items[0].id,/^[a-f0-9]{64}$/);
+    assert.equal((await call('/send',{to:'01012345678',requestId:crypto.randomUUID(),reportId:'missing',text:'forged'})).status,409);
+  }finally{globalThis.fetch=original;}
+});
 test('final lunch report compares actual accepted first snapshot, including moves and cancellations; aggregates count proxy once',()=>{
   const date='2026-10-16';
   const first=lunchSnapshot([{...candidate(),id:'a'},{...candidate(),id:'b',location:'OSBL'}],date,'2026-10-16T00:00:00Z');
