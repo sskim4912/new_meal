@@ -26,7 +26,7 @@ function updateDisabled() {
     tr.querySelectorAll('input,select,button').forEach(control=>control.disabled=unavailable||Boolean(control.dataset.field&&!row.fresh&&!edits.has(row.id)));
   });
   $('vipAdd').disabled=unavailable;$('vipSubmit').disabled=unavailable||!rows.length;
-  $('vipDate').disabled=busy;$('vipReload').disabled=busy;$('vipLogout').disabled=busy;$('vipOperator').disabled=busy;
+  $('vipDate').disabled=busy;$('vipReload').disabled=busy;$('vipLogout').disabled=busy;$('vipOperator').disabled=unavailable;
   $('vipSelectAll').disabled=unavailable||!rows.length;
   $('vipSelectAll').checked=rows.length>0&&selected.size===rows.length;
   $('vipSelectAll').indeterminate=selected.size>0&&selected.size<rows.length;
@@ -61,7 +61,7 @@ $('vipDate').onchange=async()=>{
 $('vipReload').onclick=async()=>{if(!dirty||await confirmAction('다시 조회','저장하지 않은 입력을 지우고 다시 조회할까요?'))await load();};
 $('vipAdd').onclick=()=>{if(busy||closed())return;rows.push(blank());dirty=true;render();};
 $('vipOperator').oninput=()=>{
-  if(busy)return;
+  if(busy||closed())return;
   rows.filter(row=>row.fresh).forEach(row=>{
     if(!row.operatorName||row.operatorName===row.defaultOperator){row.operatorName=$('vipOperator').value.trim();row.defaultOperator=row.operatorName;}
   });
