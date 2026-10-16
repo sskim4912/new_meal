@@ -11,6 +11,7 @@ function read() {
 export function clearSession() {
   session = null;
   try { sessionStorage.removeItem(KEY); } catch { /* Memory-only sessions still work. */ }
+  globalThis.dispatchEvent?.(new Event('admin-session-changed'));
 }
 export function sessionToken() { return read()?.token || ''; }
 export function expireSession() {
@@ -38,6 +39,7 @@ export async function loginAdmin(password) {
   const data = await adminRequest('/auth/login', { password }, false);
   session = { token: data.token, expiresAt: data.expiresAt };
   try { sessionStorage.setItem(KEY, JSON.stringify(session)); } catch { /* Keep in memory. */ }
+  globalThis.dispatchEvent?.(new Event('admin-session-changed'));
   return session;
 }
 export async function verifyAdmin() {
@@ -45,5 +47,5 @@ export async function verifyAdmin() {
   try { await adminRequest('/auth/verify'); return true; } catch { return false; }
 }
 export async function logoutAdmin() {
-  try { if (sessionToken()) await adminRequest('/auth/logout'); } finally { clearSession(); }
+  try { if (sessionToken()) await adminRequest('/auth/logout'); } finally { expireSession(); }
 }

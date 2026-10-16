@@ -1,3 +1,4 @@
+import { registerNavigationState, isNavigationLeaving } from './navigation-state.js';
 import { requireAdmin } from "./admin-entry.js";
 import { CONFIG } from "./config.js";
 import {
@@ -20,6 +21,7 @@ import {
   validateChange,
 } from "./meal-rules.js";
 import * as storage from "./storage.js?v=20261016-admin-v2";
+let identityEdited = false;
 let group = "gs",
   week = monday(kstToday()),
   profiles = {},
@@ -310,6 +312,7 @@ $("submitButton").addEventListener("click", async () => {
       all.map((row) => [slotKey(row.date, row.meal), row]),
     );
     state().drafts.clear();
+    identityEdited = false;
     state().loadedKey = key;
     status("saveStatus", `✓ ${rows.length}건 저장 완료`);
     try {
@@ -337,7 +340,7 @@ $("submitButton").addEventListener("click", async () => {
   }
 });
 window.addEventListener("beforeunload", (event) => {
-  if (Object.values(states).some((s) => s.drafts.size)) {
+  if (!isNavigationLeaving() && (identityEdited || Object.values(states).some((s) => s.drafts.size))) {
     event.preventDefault();
     event.returnValue = "";
   }
@@ -373,3 +376,10 @@ async function init() {
   if (freshStart) $("identityFields").querySelector("input").focus();
 }
 init();
+
+registerNavigationState({
+  dirty: () => identityEdited || Object.values(states).some(s => [...s.drafts.values()].some(row => !equal(s.baseline.get(slotKey(row.date, row.meal)), row))),
+  busy: () => busy,
+});
+
+$("identityFields").addEventListener("input", () => { identityEdited = true; });

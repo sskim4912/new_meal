@@ -52,7 +52,7 @@ with sync_playwright() as p:
   if configured:
    page.locator('#smsButton').click();expect(page.locator('#sendSms')).to_be_enabled();page.locator('#closeSms').click()
   page.locator('#queryDate').fill('2000-01-01');page.locator('#queryDate').dispatch_event('change');expect(page.locator('#smsButton')).to_be_disabled()
-  page.locator('#logoutButton').click();page.locator('#loginButton').click();page.locator('#password').fill('230880');page.locator('#passwordForm .primary').click()
+  page.locator('#logoutButton').click();page.get_by_role('link',name='관리자 집계',exact=True).click();page.locator('#password').fill('230880');page.locator('#passwordForm .primary').click()
   assert page.locator('#loginSmsToken').count()==0
   assert not errors,errors
   c.close()

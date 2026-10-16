@@ -1,4 +1,5 @@
-import { loginAdmin, verifyAdmin, logoutAdmin, sessionToken } from "./admin-session.js";
+import { registerNavigationState } from './navigation-state.js';
+import { loginAdmin, verifyAdmin, sessionToken } from "./admin-session.js";
 import { initSms } from "./sms-ui.js?v=20261016-admin-v2";
 import { CONFIG, price } from "./config.js";
 import {
@@ -227,7 +228,6 @@ function lockAdmin() {
     "totalCards",
   ].forEach((id) => $(id).replaceChildren());
 }
-$("logoutButton").addEventListener("click", async () => { try { await logoutAdmin(); } finally { lockAdmin(); } });
 window.addEventListener("admin-session-expired", lockAdmin);
 $("viewMode").addEventListener("change", () => {
   $("dayField").hidden = $("viewMode").value !== "day";
@@ -354,3 +354,5 @@ $("scheduleSmsButton").addEventListener("click", () => {
 });
 initSms(() => ({ unlocked, rows, query, token: sessionToken() }));
 verifyAdmin().then(valid => valid ? unlockAdmin() : openLogin());
+
+registerNavigationState({ dirty: () => false, busy: () => deleting || $("closeSms").disabled });
