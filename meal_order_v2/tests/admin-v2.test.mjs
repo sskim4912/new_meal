@@ -82,7 +82,7 @@ test('gateway builds authoritative lunch preview and ignores forged client snaps
   globalThis.fetch=async()=>Response.json([{document:{fields:Object.fromEntries(Object.entries(candidate()).map(([key,value])=>[key,typeof value==='number'?{integerValue:String(value)}:{stringValue:value}]))}}]);
   try{
     const preview=await(await call('/reports/preview',{date:'2026-10-16',kind:'first'})).json();
-    assert.match(preview.text,/중식 1차 집계/);assert.match(preview.text,/전체: 1개/);assert(!preview.text.includes('동명이인'));
+    assert.match(preview.text,/중식 1차 집계/);assert.match(preview.text,/전체: 1개/);assert.match(preview.text,/총 금액: 8,000원 \(부가세 포함\)/);assert(!preview.text.includes('동명이인'));
     const response=await call('/send',{to:'01012345678',requestId:crypto.randomUUID(),reportId:preview.reportId,text:'forged',snapshot:{total:999}});
     assert.equal(response.status,200);assert.equal(sent[0].text,preview.text);assert.equal(sent[0].snapshot.total,1);
     assert.match(sent[0].snapshot.items[0].id,/^[a-f0-9]{64}$/);
@@ -113,7 +113,10 @@ test('final lunch amount excludes cancellations, other meals and dates without r
   assert.match(text,/전체: 1개/);
   assert.match(text,/총 금액: 8,000원 \(부가세 포함\)/);
   assert.match(text,/1차 발송 기록 없음/);
-  assert(!buildLunchReport(snapshot,'first',null).includes('총 금액:'));
+  const firstText=buildLunchReport(snapshot,'first',null);
+  assert.match(firstText,/총 금액: 8,000원 \(부가세 포함\)/);
+  assert(!firstText.includes('1차 발송 기록 없음'));
+  assert.match(buildLunchReport(lunchSnapshot([],date),'first',null),/총 금액: 0원 \(부가세 포함\)/);
   assert.match(buildLunchReport(lunchSnapshot([],date),'final',null),/총 금액: 0원 \(부가세 포함\)/);
 });
 test('only provider-accepted first reports persist comparison snapshots; accepted retries do not resend or rewrite baseline',async()=>{
