@@ -95,6 +95,7 @@ test('final lunch report compares actual accepted first snapshot, including move
   const final=lunchSnapshot([{...candidate(),id:'a',location:'ISBL'},{...candidate(),id:'c'},{...candidate(),id:'d'}],date,'2026-10-16T01:00:00Z');
   const text=buildLunchReport(final,'final',first);
   assert.match(text,/총 금액: 24,000원 \(부가세 포함\)/);
+  assert.match(text,/집계 기준: [^\n]+\n총 금액: 24,000원 \(부가세 포함\)\n\n전체: 3개/);
   assert.match(text,/전체: 3개/);assert.match(text,/1차 대비: \+1개/);assert.match(text,/추가 2개 \/ 취소 1개 \/ 변경 1개/);
   assert.match(text,/OSBL: 0개 \(-1\)/);assert.match(text,/집계 기준:/);
   assert(!text.includes('동명이인'));
@@ -115,6 +116,7 @@ test('final lunch amount excludes cancellations, other meals and dates without r
   assert.match(text,/1차 발송 기록 없음/);
   const firstText=buildLunchReport(snapshot,'first',null);
   assert.match(firstText,/총 금액: 8,000원 \(부가세 포함\)/);
+  assert.match(firstText,/집계 기준: [^\n]+\n총 금액: 8,000원 \(부가세 포함\)\n\n전체: 1개/);
   assert(!firstText.includes('1차 발송 기록 없음'));
   assert.match(buildLunchReport(lunchSnapshot([],date),'first',null),/총 금액: 0원 \(부가세 포함\)/);
   assert.match(buildLunchReport(lunchSnapshot([],date),'final',null),/총 금액: 0원 \(부가세 포함\)/);

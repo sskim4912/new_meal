@@ -9,9 +9,8 @@ export function kstTime(iso) { return new Date(iso).toLocaleString('ko-KR', { ti
 const signed = n => n > 0 ? `+${n}` : n < 0 ? String(n) : '변동 없음';
 export function buildLunchReport(snapshot, kind, first) {
   if (!['first', 'final'].includes(kind)) throw new Error('집계 종류를 확인해주세요.');
-  const lines = [`[${CONFIG.projectName} 중식 ${kind === 'first' ? '1차' : '최종'} 집계]`, `식사일: ${snapshot.date}`, `집계 기준: ${kstTime(snapshot.at)} (KST)`, '', `전체: ${snapshot.total}개`];
   const amount = snapshot.items.reduce((sum, item) => sum + price(item.menu), 0);
-  lines.push(`총 금액: ${amount.toLocaleString('ko-KR')}원 (부가세 포함)`);
+  const lines = [`[${CONFIG.projectName} 중식 ${kind === 'first' ? '1차' : '최종'} 집계]`, `식사일: ${snapshot.date}`, `집계 기준: ${kstTime(snapshot.at)} (KST)`, `총 금액: ${amount.toLocaleString('ko-KR')}원 (부가세 포함)`, '', `전체: ${snapshot.total}개`];
   if (kind === 'final') {
     if (!first) lines.push('1차 발송 기록 없음');
     else {
