@@ -94,11 +94,27 @@ test('final lunch report compares actual accepted first snapshot, including move
   const first=lunchSnapshot([{...candidate(),id:'a'},{...candidate(),id:'b',location:'OSBL'}],date,'2026-10-16T00:00:00Z');
   const final=lunchSnapshot([{...candidate(),id:'a',location:'ISBL'},{...candidate(),id:'c'},{...candidate(),id:'d'}],date,'2026-10-16T01:00:00Z');
   const text=buildLunchReport(final,'final',first);
+  assert.match(text,/총 금액: 24,000원 \(부가세 포함\)/);
   assert.match(text,/전체: 3개/);assert.match(text,/1차 대비: \+1개/);assert.match(text,/추가 2개 \/ 취소 1개 \/ 변경 1개/);
   assert.match(text,/OSBL: 0개 \(-1\)/);assert.match(text,/집계 기준:/);
   assert(!text.includes('동명이인'));
   assert.match(buildLunchReport(final,'final',null),/1차 발송 기록 없음/);
   assert.equal(aggregate([candidate()],['meal'])[0].quantity,1);
+});
+test('final lunch amount excludes cancellations, other meals and dates without requiring a first report',()=>{
+  const date='2026-10-16';
+  const snapshot=lunchSnapshot([
+    candidate(),
+    {...candidate(),id:'cancelled',menu:'신청 안 함'},
+    {...candidate(),id:'breakfast',meal:'breakfast',menu:'볶음밥(김치)'},
+    {...candidate('2026-10-17'),id:'tomorrow'},
+  ],date);
+  const text=buildLunchReport(snapshot,'final',null);
+  assert.match(text,/전체: 1개/);
+  assert.match(text,/총 금액: 8,000원 \(부가세 포함\)/);
+  assert.match(text,/1차 발송 기록 없음/);
+  assert(!buildLunchReport(snapshot,'first',null).includes('총 금액:'));
+  assert.match(buildLunchReport(lunchSnapshot([],date),'final',null),/총 금액: 0원 \(부가세 포함\)/);
 });
 test('only provider-accepted first reports persist comparison snapshots; accepted retries do not resend or rewrite baseline',async()=>{
   const {env,actor}=setup();Object.assign(env,{SOLAPI_API_KEY:'fake',SOLAPI_API_SECRET:'fake',SOLAPI_FROM_NUMBER:'0212345678'});
